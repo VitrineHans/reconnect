@@ -1,94 +1,142 @@
-# Reconnect — Project Brief
+# Reconnect — Claude Instructions
 
 ## What is Reconnect?
 
-Reconnect is a 1:1 friendship app that deepens real connections through ephemeral video Q&A, streaks, and a reveal mechanic. Think Duolingo for friendships — addictive, meaningful, always free for users.
+A 1:1 friendship app that deepens real connections through daily ephemeral video Q&A. Think Duolingo for friendships — addictive, meaningful, **always free for users**.
+
+Each friendship gets one question per day. Both friends record short video answers in secret. Neither sees the other's answer until both submit — then the reveal fires. Miss the 24-hour window → streak resets to 0, no exceptions. Video is deleted after watching.
 
 > Full product spec: `docs/superpowers/specs/2026-04-04-reconnect-product-vision-design.md`
+> GSD planning: `.planning/` (PROJECT.md, REQUIREMENTS.md, ROADMAP.md)
 
 ---
 
-## Core Features
+## Current Status (as of 2026-04-04)
 
-### 1. Friend System
-- Invite someone as a friend (one-to-one connection)
-- Each friendship is its own streak
+**Phase: Pre-development. GSD planning complete. Ready to start Phase 1.**
 
-### 2. Video Q&A Loop
-- A question is surfaced to both users
-- Each user records and sends a short video answer
-- Video is deleted after the recipient watches it (ephemeral)
-- Neither user sees the other's answer until both have responded (or after a time window)
+What exists:
+- Expo Router navigation shell with auth guard
+- Supabase schema (6 tables, RLS on all)
+- `useSession` hook, Supabase client singleton
+- All screens are **placeholders only** — no real features implemented
 
-### 3. Question Algorithm
-- Questions are categorized: funny / deep / personal
-- Users can like or dislike a question
-- Algorithm learns preferences per user and per friendship over time
-- Questions should feel fresh — avoid repetition
+What needs building (4 phases):
+- **Phase 1** — Auth UI, profiles, friend invite system
+- **Phase 2** — Video loop, question engine, reveal mechanic, design system
+- **Phase 3** — Streak engine (24h window), push notifications
+- **Phase 4** — Sponsored question packs, friendship gifts
 
-### 4. Streaks & Gamification
-- Answering keeps a streak alive (similar to Duolingo/Snapchat)
-- **24-hour window** — miss it and the streak resets to 0, no exceptions
-- Streak milestones (30, 60, 100, 365 days) trigger celebration moments and gift prompts
-- Friendly nudges/notifications when a streak is at risk
-
-### 5. Ephemeral Video
-- Videos are stored temporarily and deleted after being watched
-- No permanent archive — encourages authenticity over performance
+Run `/gsd-plan-phase 1` to start Phase 1 execution.
 
 ---
 
 ## Product Principles
 
-- **Intimacy over scale** — designed for close friends, not followers
-- **Low friction** — answer in seconds, no editing or perfectionism
-- **Authentic** — ephemeral video removes pressure
-- **Addictive but meaningful** — gamification serves connection, not just engagement
+- **Intimacy over scale** — 1:1 only in v1, no groups
+- **Free forever** — users never pay; no subscriptions, no paywalls, ever
+- **Ephemeral** — videos deleted after watching; no archive
+- **Authentic** — low friction, no editing, no perfectionism
+- **Addictive but meaningful** — gamification serves connection
 
 ---
 
-## Tech Stack (TBD — to be confirmed)
+## Core Loop
 
-### Frontend
-- **React Native** (Expo) — cross-platform iOS + Android
-- Navigation: Expo Router
-- Video recording: Expo Camera / expo-video
+```
+Question drops (24h window opens)
+     ↓
+Both friends record video answers in secret
+     ↓  (can't see partner's until both submit)
+Both submitted → REVEAL fires → push notification
+     ↓
+Watch each other's videos → video deleted → streak +1
+     ↓
+New question in 24 hours
+```
 
-### Backend
-- **Node.js** with **Fastify** or **Express**
-- **Supabase** — auth, database (PostgreSQL), realtime, storage
-- Video storage: Supabase Storage (with signed URLs + auto-delete policy)
+Miss the 24h window → streak resets to 0. No grace period.
 
-### Algorithm
-- Question scoring per user stored in DB
-- Simple weighted scoring to start (likes/dislikes + recency)
-- Can evolve to ML-based recommendations later
-
-### Notifications
-- **Expo Push Notifications** or Firebase Cloud Messaging
-- Streak reminders, new question available, friend answered
-
-### Testing
-- **Playwright** — E2E testing
-- Jest / React Native Testing Library — unit/component tests
+**Primary hooks:** Streak (loss-aversion) + Reveal Moment (FOMO/curiosity)
+**Deferred:** Friendship Story/timeline (v2+)
 
 ---
 
-## Key Data Models (Draft)
+## Tech Stack (Confirmed)
 
-- `users` — profile, preferences
-- `friendships` — user_a, user_b, streak_count, last_answered_at
-- `questions` — text, category (funny/deep/personal), author
-- `question_responses` — user_id, friendship_id, question_id, video_url, watched_at
-- `question_ratings` — user_id, question_id, rating (like/dislike)
+| Layer | Choice |
+|---|---|
+| Mobile | React Native 0.81.5 via Expo 54 |
+| Navigation | Expo Router 6 (file-based) |
+| Video | Expo Camera / expo-video |
+| Backend | Supabase (Auth + PostgreSQL + Realtime + Storage) |
+| DB | PostgreSQL 17 via Supabase |
+| Notifications | Expo Push Notifications |
+| Testing | Playwright (E2E) + Jest + React Native Testing Library |
+
+No separate backend API server — mobile talks directly to Supabase via RLS.
+
+---
+
+## Database Schema (Confirmed)
+
+Tables in `supabase/migrations/20260404000000_init.sql`:
+- `profiles` — extends auth.users; username, display_name, avatar_url
+- `questions` — text, category (funny/deep/personal); **needs**: `is_sponsored`, `brand_id`
+- `friendships` — user_a, user_b (user_a < user_b), streak_count; **needs**: `current_question_id`
+- `friend_invites` — from/to user, status (pending/accepted/declined)
+- `question_responses` — friendship_id, question_id, user_id, video_url, watched_at; **needs**: `expires_at`
+- `question_ratings` — user_id, question_id, rating (-1/1)
+
+RLS enabled on all tables. Missing fields noted above need migration in Phase 1/2.
+
+---
+
+## Monetization (All free to users)
+
+### Day-1
+| Stream | Model |
+|---|---|
+| **Sponsored Question Packs** | Brands (Spotify, Airbnb, Nike) pay to sponsor themed question categories. Labelled, opt-out available. |
+| **Friendship Gifts** | Affiliate commission 10–20% on gifts (coffee, flowers, experiences) surfaced at streak milestones. |
+| **Friendship Wrapped** | Annual recap — free base, premium cinematic ~$9.99 one-time. Major organic marketing moment. |
+| **Brand Moments** | Seasonal/holiday question takeovers with exclusivity pricing. |
+
+### Later (post-userbase)
+- B2B Licensing — therapists, dating apps, HR tools
+- Anonymized Trend Data — aggregated reports; never individual; opt-in; disclosed at onboarding
+
+### Explicitly rejected
+- Streak shields / selling streak protection
+
+---
+
+## GSD Planning Structure
+
+```
+.planning/
+├── PROJECT.md        ← Vision, constraints, key decisions
+├── REQUIREMENTS.md   ← 47 v1 requirements (AUTH, FRIEND, LOOP, VIDEO, REVEAL, STREAK, PUSH, SPONSOR, GIFT)
+├── ROADMAP.md        ← 4 phases with exit criteria
+├── config.json       ← YOLO mode, coarse granularity, parallel, git-tracked
+└── codebase/
+    ├── STACK.md       ← Full dependency list with versions
+    ├── INTEGRATIONS.md ← Supabase config, env vars, RLS details
+    ├── ARCHITECTURE.md ← Layers, nav structure, data flow
+    ├── STRUCTURE.md   ← Directory map, naming conventions
+    ├── CONVENTIONS.md ← TypeScript, component, hook patterns
+    ├── TESTING.md     ← Current state (no tests), what needs them
+    └── CONCERNS.md    ← All placeholder code, missing DB fields, gaps
+```
 
 ---
 
 ## Code Review Standards
-After completing any implementation, review the code for:
+
+After completing any implementation, review for:
 - Functions longer than 30 lines (likely doing too much)
 - Logic duplicated more than twice (extract to utility)
-- Any `any` type usage in TypeScript (replace with real types)
+- Any `any` type in TypeScript (replace with real types)
 - Components with more than 3 props that could be grouped into an object
 - Missing error handling on async operations
 
@@ -100,48 +148,27 @@ Run /simplify before presenting code to the user.
 
 | Plugin | Purpose |
 |---|---|
-| **Context7** | Up-to-date docs for React Native, Supabase, Expo, etc. |
-| **Playwright** | E2E browser/app testing automation |
-| **Superpowers** | Extended Claude capabilities (file ops, scheduling, etc.) |
+| **Context7** | Up-to-date docs for React Native, Supabase, Expo |
+| **Playwright** | E2E browser/app testing |
+| **Superpowers** | Skills, brainstorming, GSD workflow |
+
+Installed skills: `frontend-design`, `browser-use` (in `.claude/skills/`)
 
 ---
 
-## Notes & Decisions
+## Key Decisions
 
-- Videos must be auto-deleted after watch — enforce at storage level, not just app level
-- Start with iOS-first if needed, but design for cross-platform from day one
-- Question library needs to be seeded manually first, algorithm improves over time
-- No public profiles — everything is private between friends
-- **App is always free for users — no subscriptions, no paywalls, ever**
-- **V1 is 1:1 only** — no group play
-- Friendship Story / timeline feature is deferred (not v1)
-- Beautiful and playful UI is a priority — design sprint to come
-
----
-
-## Monetization Strategy (Decided 2026-04-04)
-
-### Day-1
-| Stream | How it works |
+| Decision | Rationale |
 |---|---|
-| **Sponsored Question Packs** | Brands (Spotify, Airbnb, Nike) pay to sponsor themed question categories. Feels like curated content, never forced. |
-| **Friendship Gifts** | Affiliate commission (10–20%) on real gifts (coffee, flowers, experiences) surfaced at streak milestones. |
-| **Friendship Wrapped** | Annual recap — free base version, premium cinematic version ~$9.99 one-time. Major organic marketing moment. |
-| **Brand Moments** | Seasonal/holiday question takeovers with exclusivity pricing (higher CPM than evergreen packs). |
-
-### Later (post-userbase)
-- **B2B Licensing** — therapists, dating apps, HR tools, family apps
-- **Anonymized Trend Data** — aggregated reports to media/research; never individual data; opt-out available
-
-### Explicitly ruled out
-- Streak shields / selling streak protection — rejected
-
----
+| 24h window, hard reset, no grace period | Maximum loss-aversion; no exceptions reduces streak dilution |
+| Secret until both answer | Drives completion; reveal is the dopamine hit |
+| Free forever, brand monetization | No paywall friction; sponsored packs feel like content |
+| No separate backend | Supabase handles everything; simpler architecture |
+| 1:1 only in v1 | Validate core loop before adding group complexity |
+| Max video length: 30s | Decided in requirements (was open question) |
+| Users can re-record before submitting | Yes — confirmed in requirements |
 
 ## Open Questions
 
-- [ ] Max video length? (15s? 30s?)
-- [ ] Can you re-watch your own video before sending?
-- [ ] Grace period logic — what exactly happens at the 24h boundary?
-- [ ] Should questions be shown to both friends simultaneously or staggered?
-- [ ] How are sponsored packs disclosed to users (label, opt-in screen)?
+- [ ] Should questions surface simultaneously to both friends, or when each opens the app?
+- [ ] How are sponsored packs visually disclosed — small badge, or explicit opt-in screen?
