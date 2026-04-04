@@ -2,7 +2,9 @@
 
 ## What is Reconnect?
 
-Reconnect is a mobile app that strengthens relationships by having friends answer a funny, deep, or personal question via short video. It's built around streaks, ephemeral video, and a smart question algorithm — think BeReal meets Snapchat meets a relationship-building game.
+Reconnect is a 1:1 friendship app that deepens real connections through ephemeral video Q&A, streaks, and a reveal mechanic. Think Duolingo for friendships — addictive, meaningful, always free for users.
+
+> Full product spec: `docs/superpowers/specs/2026-04-04-reconnect-product-vision-design.md`
 
 ---
 
@@ -26,9 +28,9 @@ Reconnect is a mobile app that strengthens relationships by having friends answe
 
 ### 4. Streaks & Gamification
 - Answering keeps a streak alive (similar to Duolingo/Snapchat)
-- Badges, milestones, streak shields
+- **24-hour window** — miss it and the streak resets to 0, no exceptions
+- Streak milestones (30, 60, 100, 365 days) trigger celebration moments and gift prompts
 - Friendly nudges/notifications when a streak is at risk
-- Leaderboards or shared stats between friends ("You've answered 42 questions together")
 
 ### 5. Ephemeral Video
 - Videos are stored temporarily and deleted after being watched
@@ -98,6 +100,29 @@ Reconnect is a mobile app that strengthens relationships by having friends answe
 - Start with iOS-first if needed, but design for cross-platform from day one
 - Question library needs to be seeded manually first, algorithm improves over time
 - No public profiles — everything is private between friends
+- **App is always free for users — no subscriptions, no paywalls, ever**
+- **V1 is 1:1 only** — no group play
+- Friendship Story / timeline feature is deferred (not v1)
+- Beautiful and playful UI is a priority — design sprint to come
+
+---
+
+## Monetization Strategy (Decided 2026-04-04)
+
+### Day-1
+| Stream | How it works |
+|---|---|
+| **Sponsored Question Packs** | Brands (Spotify, Airbnb, Nike) pay to sponsor themed question categories. Feels like curated content, never forced. |
+| **Friendship Gifts** | Affiliate commission (10–20%) on real gifts (coffee, flowers, experiences) surfaced at streak milestones. |
+| **Friendship Wrapped** | Annual recap — free base version, premium cinematic version ~$9.99 one-time. Major organic marketing moment. |
+| **Brand Moments** | Seasonal/holiday question takeovers with exclusivity pricing (higher CPM than evergreen packs). |
+
+### Later (post-userbase)
+- **B2B Licensing** — therapists, dating apps, HR tools, family apps
+- **Anonymized Trend Data** — aggregated reports to media/research; never individual data; opt-out available
+
+### Explicitly ruled out
+- Streak shields / selling streak protection — rejected
 
 ---
 
@@ -105,6 +130,6 @@ Reconnect is a mobile app that strengthens relationships by having friends answe
 
 - [ ] Max video length? (15s? 30s?)
 - [ ] Can you re-watch your own video before sending?
-- [ ] What happens when one friend answers but the other doesn't for 24h?
-- [ ] Monetization strategy? (Premium streaks, custom questions, etc.)
+- [ ] Grace period logic — what exactly happens at the 24h boundary?
 - [ ] Should questions be shown to both friends simultaneously or staggered?
+- [ ] How are sponsored packs disclosed to users (label, opt-in screen)?
