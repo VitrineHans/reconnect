@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
+import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 const QUESTIONS = [
   { key: 'friendship_length', prompt: 'How long have you known each other?', type: 'choice' as const,
@@ -75,7 +76,7 @@ export default function QuestionnaireScreen() {
 
   const setAnswer = (key: string, val: AnswerValue) => setAnswers((prev) => ({ ...prev, [key]: val }));
   const q = QUESTIONS[step];
-  const progress = ((step) / QUESTIONS.length) * 100;
+  const progress = (step / QUESTIONS.length) * 100;
   const isLast = step === QUESTIONS.length - 1;
 
   const advance = async () => {
@@ -99,24 +100,92 @@ export default function QuestionnaireScreen() {
       <Text style={styles.prompt}>{q.prompt}</Text>
       {renderQuestion(q, answers, setAnswer)}
       <TouchableOpacity style={styles.button} onPress={advance} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{isLast ? 'Submit' : 'Next'}</Text>}
+        {loading
+          ? <ActivityIndicator color={colors.bg} />
+          : <Text style={styles.buttonText}>{isLast ? 'Submit' : 'Next'}</Text>}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, flexGrow: 1, backgroundColor: '#fff' },
-  progressBar: { height: 4, backgroundColor: '#eee', borderRadius: 2, marginBottom: 24 },
-  progressFill: { height: 4, backgroundColor: '#000', borderRadius: 2 },
-  stepLabel: { fontSize: 13, color: '#999', marginBottom: 8 },
-  prompt: { fontSize: 22, fontWeight: '700', marginBottom: 24, color: '#111' },
-  optionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
-  scaleRow: { flexDirection: 'row', gap: 10, marginBottom: 32 },
-  option: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1.5, borderColor: '#ddd', backgroundColor: '#fff' },
-  optionSelected: { borderColor: '#000', backgroundColor: '#000' },
-  optionText: { fontSize: 15, color: '#333' },
-  optionTextSelected: { color: '#fff', fontWeight: '600' },
-  button: { backgroundColor: '#000', borderRadius: 8, padding: 16, alignItems: 'center', marginTop: 'auto' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  container: {
+    padding: spacing[6],
+    flexGrow: 1,
+    backgroundColor: colors.bg,
+  },
+  progressBar: {
+    height: 3,
+    backgroundColor: colors.surface3,
+    borderRadius: radius.full,
+    marginBottom: spacing[6],
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 3,
+    backgroundColor: colors.ember,
+    borderRadius: radius.full,
+  },
+  stepLabel: {
+    fontSize: typography.sizes.xs,
+    fontFamily: typography.families.bodyMedium,
+    color: colors.textMuted,
+    marginBottom: spacing[3],
+    letterSpacing: typography.letterSpacing.widest,
+    textTransform: 'uppercase',
+  },
+  prompt: {
+    fontSize: typography.sizes.xl,
+    fontFamily: typography.families.display,
+    color: colors.text,
+    letterSpacing: typography.letterSpacing.tight,
+    marginBottom: spacing[6],
+    lineHeight: typography.sizes.xl * typography.lineHeights.snug,
+  },
+  optionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing[2],
+    marginBottom: spacing[8],
+  },
+  scaleRow: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    marginBottom: spacing[8],
+  },
+  option: {
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.stroke,
+    backgroundColor: colors.surface2,
+  },
+  optionSelected: {
+    borderColor: colors.ember,
+    backgroundColor: colors.ember,
+  },
+  optionText: {
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodyMedium,
+    color: colors.textSecondary,
+  },
+  optionTextSelected: {
+    color: colors.bg,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
+  button: {
+    backgroundColor: colors.ember,
+    borderRadius: radius.md,
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+    marginTop: 'auto',
+  },
+  buttonText: {
+    color: colors.bg,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
 });

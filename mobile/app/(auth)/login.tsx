@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
+import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
   const router = useRouter();
 
   const sendOtp = async () => {
@@ -25,29 +27,79 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Reconnect</Text>
-      <Text style={styles.subtitle}>Enter your email to get started</Text>
+      <View style={styles.hero}>
+        <Text style={styles.wordmark}>Reconnect</Text>
+        <Text style={styles.subtitle}>Daily video Q&A with your closest people</Text>
+      </View>
       <TextInput
-        style={styles.input}
+        style={[styles.input, focused && styles.inputFocused]}
         placeholder="your@email.com"
+        placeholderTextColor={colors.textMuted}
         value={email}
         onChangeText={setEmail}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
       />
       <TouchableOpacity style={styles.button} onPress={sendOtp} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send Code</Text>}
+        {loading
+          ? <ActivityIndicator color={colors.bg} />
+          : <Text style={styles.buttonText}>Send Code</Text>}
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 32, fontWeight: 'bold', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#666', marginBottom: 32 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 14, fontSize: 16, marginBottom: 16 },
-  button: { backgroundColor: '#000', borderRadius: 8, padding: 16, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  container: {
+    flex: 1,
+    paddingHorizontal: spacing[6],
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+  },
+  hero: {
+    marginBottom: spacing[8],
+  },
+  wordmark: {
+    fontSize: typography.sizes['3xl'],
+    fontFamily: typography.families.display,
+    color: colors.text,
+    letterSpacing: typography.letterSpacing.tight,
+    marginBottom: spacing[2],
+  },
+  subtitle: {
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    color: colors.textSecondary,
+    lineHeight: typography.sizes.base * typography.lineHeights.normal,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    color: colors.text,
+    backgroundColor: colors.surface2,
+    marginBottom: spacing[4],
+  },
+  inputFocused: {
+    borderColor: colors.ember,
+  },
+  button: {
+    backgroundColor: colors.ember,
+    borderRadius: radius.md,
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: colors.bg,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
 });

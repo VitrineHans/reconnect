@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useSession } from '../../hooks/useSession';
 import { useProfile } from '../../hooks/useProfile';
 import { supabase } from '../../lib/supabase';
+import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 export default function ProfileScreen() {
   const { session } = useSession();
@@ -11,6 +12,7 @@ export default function ProfileScreen() {
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   const saveDisplayName = async () => {
     if (!displayName.trim() || displayName.length > 50) {
@@ -51,24 +53,52 @@ export default function ProfileScreen() {
     // auth guard redirects to /(auth)/login automatically
   };
 
-  if (profileLoading) return <View style={styles.container}><ActivityIndicator /></View>;
+  if (profileLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color={colors.ember} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity onPress={pickAvatar} style={styles.avatarWrapper}>
-        {uploading ? <ActivityIndicator style={styles.avatar} /> :
-          profile?.avatar_url ? <Image source={{ uri: profile.avatar_url }} style={styles.avatar} /> :
-          <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Text style={styles.avatarInitial}>{profile?.display_name?.[0]?.toUpperCase() ?? '?'}</Text>
-          </View>}
+        {uploading
+          ? <View style={styles.avatar}><ActivityIndicator color={colors.ember} /></View>
+          : profile?.avatar_url
+            ? <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+            : (
+              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                <Text style={styles.avatarInitial}>
+                  {profile?.display_name?.[0]?.toUpperCase() ?? '?'}
+                </Text>
+              </View>
+            )}
         <Text style={styles.changePhoto}>Change photo</Text>
       </TouchableOpacity>
+
       <Text style={styles.username}>@{profile?.username}</Text>
-      <Text style={styles.label}>Display name</Text>
-      <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} placeholder="Your name" />
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Display name</Text>
+        <TextInput
+          style={[styles.input, focused && styles.inputFocused]}
+          value={displayName}
+          onChangeText={setDisplayName}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="Your name"
+          placeholderTextColor={colors.textMuted}
+        />
+      </View>
+
       <TouchableOpacity style={styles.button} onPress={saveDisplayName} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save</Text>}
+        {saving
+          ? <ActivityIndicator color={colors.bg} />
+          : <Text style={styles.buttonText}>Save</Text>}
       </TouchableOpacity>
+
       <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
         <Text style={styles.signOutText}>Sign out</Text>
       </TouchableOpacity>
@@ -77,17 +107,102 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, alignItems: 'center', backgroundColor: '#fff', flexGrow: 1 },
-  avatarWrapper: { alignItems: 'center', marginTop: 40, marginBottom: 8 },
-  avatar: { width: 80, height: 80, borderRadius: 40 },
-  avatarPlaceholder: { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
-  avatarInitial: { fontSize: 32, fontWeight: 'bold', color: '#666' },
-  changePhoto: { marginTop: 8, fontSize: 14, color: '#007AFF' },
-  username: { fontSize: 18, color: '#999', marginBottom: 32 },
-  label: { alignSelf: 'flex-start', fontSize: 14, fontWeight: '600', marginBottom: 6, color: '#333' },
-  input: { width: '100%', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 14, fontSize: 16, marginBottom: 16 },
-  button: { width: '100%', backgroundColor: '#000', borderRadius: 8, padding: 16, alignItems: 'center', marginBottom: 16 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  signOutButton: { marginTop: 'auto', padding: 16 },
-  signOutText: { color: '#ff3b30', fontSize: 16 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+  },
+  container: {
+    padding: spacing[6],
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+    flexGrow: 1,
+  },
+  avatarWrapper: {
+    alignItems: 'center',
+    marginTop: spacing[10],
+    marginBottom: spacing[2],
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.surface3,
+    borderWidth: 1.5,
+    borderColor: colors.strokeStrong,
+  },
+  avatarInitial: {
+    fontSize: typography.sizes.xl,
+    fontFamily: typography.families.display,
+    color: colors.textSecondary,
+  },
+  changePhoto: {
+    marginTop: spacing[2],
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodyMedium,
+    color: colors.ember,
+  },
+  username: {
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    color: colors.textSecondary,
+    marginBottom: spacing[8],
+    marginTop: spacing[2],
+  },
+  fieldGroup: {
+    width: '100%',
+    marginBottom: spacing[4],
+  },
+  label: {
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing[2],
+    letterSpacing: typography.letterSpacing.wide,
+    textTransform: 'uppercase',
+  },
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    color: colors.text,
+    backgroundColor: colors.surface2,
+  },
+  inputFocused: {
+    borderColor: colors.ember,
+  },
+  button: {
+    width: '100%',
+    backgroundColor: colors.ember,
+    borderRadius: radius.md,
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+    marginBottom: spacing[4],
+  },
+  buttonText: {
+    color: colors.bg,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
+  signOutButton: {
+    marginTop: 'auto',
+    padding: spacing[4],
+  },
+  signOutText: {
+    color: colors.flame,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodyMedium,
+  },
 });

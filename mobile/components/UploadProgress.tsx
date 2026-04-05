@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography, spacing, radius } from '../theme/tokens';
 
 type Props = {
   progress: number;
@@ -20,14 +21,28 @@ export function UploadProgress({ progress, visible }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', paddingHorizontal: 24, gap: 8 },
+  container: {
+    alignItems: 'center',
+    paddingHorizontal: spacing[6],
+    gap: spacing[2],
+    width: '100%',
+  },
   track: {
     width: '100%',
-    height: 4,
-    backgroundColor: '#eee',
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: colors.surface3,
+    borderRadius: radius.full,
     overflow: 'hidden',
   },
-  bar: { height: 4, backgroundColor: '#6B4EFF', borderRadius: 2 },
-  label: { fontSize: 14, color: '#333' },
+  bar: {
+    height: 6,
+    backgroundColor: colors.ember,
+    borderRadius: radius.full,
+  },
+  label: {
+    fontSize: typography.sizes.xs,
+    fontFamily: typography.families.bodyMedium,
+    color: colors.textSecondary,
+    alignSelf: 'flex-end',
+  },
 });

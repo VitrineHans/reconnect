@@ -4,6 +4,7 @@ import { useSession } from '../../hooks/useSession';
 import { useFriendships } from '../../hooks/useFriendships';
 import type { FriendshipWithState } from '../../hooks/useFriendships';
 import { FriendshipCard } from '../../components/FriendshipCard';
+import { colors, typography, spacing } from '../../theme/tokens';
 
 export default function HomeScreen() {
   const { session } = useSession();
@@ -23,7 +24,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={colors.ember} />
       </View>
     );
   }
@@ -47,20 +48,52 @@ export default function HomeScreen() {
         />
       )}
       contentContainerStyle={styles.list}
+      style={styles.screen}
       ListEmptyComponent={
         <View style={styles.centered}>
           <Text style={styles.emptyText}>No friendships yet — invite someone!</Text>
         </View>
       }
-      ListHeaderComponent={<Text style={styles.heading}>Your Questions</Text>}
+      ListHeaderComponent={
+        <Text style={styles.heading}>Your Questions</Text>
+      }
     />
   );
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 16, flexGrow: 1 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginTop: 48, marginBottom: 16 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  emptyText: { fontSize: 16, color: '#888', textAlign: 'center' },
-  errorText: { fontSize: 14, color: '#c62828', textAlign: 'center' },
+  screen: {
+    backgroundColor: colors.bg,
+  },
+  list: {
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[8],
+    flexGrow: 1,
+  },
+  heading: {
+    fontSize: typography.sizes['2xl'],
+    fontFamily: typography.families.display,
+    color: colors.text,
+    letterSpacing: typography.letterSpacing.tight,
+    marginTop: spacing[12],
+    marginBottom: spacing[4],
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing[6],
+  },
+  emptyText: {
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.body,
+    color: colors.flame,
+    textAlign: 'center',
+  },
 });

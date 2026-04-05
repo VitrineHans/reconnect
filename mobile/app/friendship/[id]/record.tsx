@@ -6,6 +6,7 @@ import { UploadProgress } from '../../../components/UploadProgress';
 import { useVideoUpload } from '../../../hooks/useVideoUpload';
 import { useSession } from '../../../hooks/useSession';
 import { supabase } from '../../../lib/supabase';
+import { colors, typography, spacing, radius } from '../../../theme/tokens';
 
 export default function RecordScreen() {
   const { id, questionId } = useLocalSearchParams<{ id: string; questionId: string }>();
@@ -82,28 +83,47 @@ export default function RecordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
   progressOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
+    gap: spacing[4],
   },
-  uploadingText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  uploadingText: {
+    color: colors.text,
+    fontSize: typography.sizes.lg,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: spacing[6],
     backgroundColor: '#000',
   },
-  errorText: { color: '#FF4E4E', fontSize: 16, textAlign: 'center', marginBottom: 24 },
-  retryButton: {
-    backgroundColor: '#6B4EFF',
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 32,
+  errorText: {
+    color: colors.flame,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    textAlign: 'center',
+    marginBottom: spacing[6],
   },
-  retryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  retryButton: {
+    backgroundColor: colors.ember,
+    paddingHorizontal: spacing[8],
+    paddingVertical: spacing[4],
+    borderRadius: radius.full,
+  },
+  retryText: {
+    color: colors.bg,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
 });

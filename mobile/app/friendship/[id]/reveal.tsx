@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 import { VideoPlayer } from '../../../components/VideoPlayer';
 import { useSession } from '../../../hooks/useSession';
+import { colors, typography, spacing } from '../../../theme/tokens';
 
 interface RevealResponse {
   id: string;
@@ -82,7 +83,8 @@ export default function RevealScreen() {
   if (state.loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6B4EFF" />
+        <ActivityIndicator size="large" color={colors.gold} />
+        <Text style={styles.loadingText}>Getting their answer...</Text>
       </View>
     );
   }
@@ -106,6 +108,23 @@ export default function RevealScreen() {
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
-  errorText: { color: '#FF4E4E', fontSize: 16, textAlign: 'center', padding: 24 },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    gap: spacing[3],
+  },
+  loadingText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.body,
+  },
+  errorText: {
+    color: colors.flame,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    textAlign: 'center',
+    padding: spacing[6],
+  },
 });

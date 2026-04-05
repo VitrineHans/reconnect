@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
+import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -89,9 +90,13 @@ function useFriendsData(userId: string | undefined) {
 function SearchResultCard({ profile, onAdd }: { profile: ProfileSummary; onAdd: () => void }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.cardName}>{profile.display_name ?? profile.username}</Text>
-      <Text style={styles.cardUsername}>@{profile.username}</Text>
-      <TouchableOpacity style={styles.addButton} onPress={onAdd}><Text style={styles.addButtonText}>Add</Text></TouchableOpacity>
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardName}>{profile.display_name ?? profile.username}</Text>
+        <Text style={styles.cardUsername}>@{profile.username}</Text>
+      </View>
+      <TouchableOpacity style={styles.addButton} onPress={onAdd}>
+        <Text style={styles.addButtonText}>Add</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -102,8 +107,12 @@ function InviteCard({ invite, onAccept, onDecline }: { invite: FriendInvite; onA
       <Text style={styles.cardName}>{invite.profile.display_name ?? invite.profile.username}</Text>
       <Text style={styles.cardUsername}>@{invite.profile.username} wants to connect</Text>
       <View style={styles.inviteActions}>
-        <TouchableOpacity style={styles.acceptButton} onPress={onAccept}><Text style={styles.acceptText}>Accept</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.declineButton} onPress={onDecline}><Text style={styles.declineText}>Decline</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
+          <Text style={styles.acceptText}>Accept</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.declineButton} onPress={onDecline}>
+          <Text style={styles.declineText}>Decline</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -112,9 +121,15 @@ function InviteCard({ invite, onAccept, onDecline }: { invite: FriendInvite; onA
 function FriendCard({ friendship }: { friendship: Friendship }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.cardName}>{friendship.other_user.display_name ?? friendship.other_user.username}</Text>
-      <Text style={styles.cardUsername}>@{friendship.other_user.username}</Text>
-      <Text style={styles.streak}>{friendship.streak_count} day streak</Text>
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardName}>{friendship.other_user.display_name ?? friendship.other_user.username}</Text>
+        <Text style={styles.cardUsername}>@{friendship.other_user.username}</Text>
+      </View>
+      {friendship.streak_count > 0 && (
+        <View style={styles.streakBadge}>
+          <Text style={styles.streakText}>🔥 {friendship.streak_count}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -126,7 +141,13 @@ export default function FriendsScreen() {
   const userId = session?.user?.id;
   const { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite } = useFriendsData(userId);
 
-  if (loading) return <View style={styles.container}><ActivityIndicator /></View>;
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color={colors.ember} />
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -135,24 +156,47 @@ export default function FriendsScreen() {
         <View style={styles.container}>
           <Text style={styles.title}>Friends</Text>
 
-          <TextInput style={styles.searchInput} placeholder="Search by username..." value={search} onChangeText={setSearch} autoCapitalize="none" autoCorrect={false} />
-          {searchResults.length === 0 && search.length === 0 && <Text style={styles.emptyHint}>Search for friends by username</Text>}
-          {searchResults.map(p => <SearchResultCard key={p.id} profile={p} onAdd={() => sendInvite(p.id)} />)}
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by username..."
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchResults.length === 0 && search.length === 0 && (
+            <Text style={styles.emptyHint}>Search for friends by username</Text>
+          )}
+          {searchResults.map(p => (
+            <SearchResultCard key={p.id} profile={p} onAdd={() => sendInvite(p.id)} />
+          ))}
 
-          {pendingInvites.length > 0 && <Text style={styles.sectionTitle}>Pending invites</Text>}
+          {pendingInvites.length > 0 && (
+            <Text style={styles.sectionTitle}>Pending invites</Text>
+          )}
           {pendingInvites.map(inv => (
-            <InviteCard key={inv.id} invite={inv}
+            <InviteCard
+              key={inv.id}
+              invite={inv}
               onAccept={() => respondToInvite(inv.id, 'accepted')}
-              onDecline={() => respondToInvite(inv.id, 'declined')} />
+              onDecline={() => respondToInvite(inv.id, 'declined')}
+            />
           ))}
 
           <Text style={styles.sectionTitle}>My Friends</Text>
-          {friendships.length === 0 && <Text style={styles.emptyHint}>No friends yet — search above to add someone</Text>}
+          {friendships.length === 0 && (
+            <Text style={styles.emptyHint}>No friends yet — search above to add someone</Text>
+          )}
         </View>
       )}
       data={friendships}
       keyExtractor={f => f.id}
-      renderItem={({ item }) => <FriendCard friendship={item} />}
+      renderItem={({ item }) => (
+        <View style={styles.friendItemWrapper}>
+          <FriendCard friendship={item} />
+        </View>
+      )}
     />
   );
 }
@@ -160,21 +204,138 @@ export default function FriendsScreen() {
 // ── Styles ─────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  list: { backgroundColor: '#fff' },
-  container: { padding: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, marginTop: 40 },
-  searchInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16, marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginTop: 24, marginBottom: 8, color: '#333' },
-  emptyHint: { color: '#999', fontSize: 14, marginBottom: 8 },
-  card: { borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 14, marginBottom: 8 },
-  cardName: { fontSize: 16, fontWeight: '600' },
-  cardUsername: { fontSize: 13, color: '#666', marginTop: 2 },
-  streak: { fontSize: 13, color: '#f97316', marginTop: 4 },
-  addButton: { position: 'absolute', right: 14, top: 14, backgroundColor: '#000', borderRadius: 6, paddingHorizontal: 12, paddingVertical: 6 },
-  addButtonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  inviteActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  acceptButton: { flex: 1, backgroundColor: '#000', borderRadius: 6, padding: 10, alignItems: 'center' },
-  acceptText: { color: '#fff', fontWeight: '600' },
-  declineButton: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 6, padding: 10, alignItems: 'center' },
-  declineText: { color: '#666' },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+  },
+  list: {
+    backgroundColor: colors.bg,
+  },
+  container: {
+    paddingHorizontal: spacing[6],
+    paddingBottom: spacing[4],
+  },
+  title: {
+    fontSize: typography.sizes['2xl'],
+    fontFamily: typography.families.display,
+    color: colors.text,
+    letterSpacing: typography.letterSpacing.tight,
+    marginBottom: spacing[5],
+    marginTop: spacing[12],
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    color: colors.text,
+    backgroundColor: colors.surface2,
+    marginBottom: spacing[3],
+  },
+  sectionTitle: {
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    marginTop: spacing[6],
+    marginBottom: spacing[3],
+    letterSpacing: typography.letterSpacing.wide,
+    textTransform: 'uppercase',
+  },
+  emptyHint: {
+    color: colors.textMuted,
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.body,
+    marginBottom: spacing[2],
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    marginBottom: spacing[2],
+    backgroundColor: colors.surface,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardName: {
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  cardUsername: {
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.body,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  streakBadge: {
+    backgroundColor: colors.surface3,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing[2],
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: colors.strokeStrong,
+  },
+  streakText: {
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodyBold,
+    fontWeight: '700',
+    color: colors.gold,
+  },
+  addButton: {
+    backgroundColor: colors.ember,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+  },
+  addButtonText: {
+    color: colors.bg,
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
+  inviteActions: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    marginTop: spacing[2],
+    width: '100%',
+  },
+  acceptButton: {
+    flex: 1,
+    backgroundColor: colors.ember,
+    borderRadius: radius.sm,
+    padding: spacing[2],
+    alignItems: 'center',
+  },
+  acceptText: {
+    color: colors.bg,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
+  declineButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    borderRadius: radius.sm,
+    padding: spacing[2],
+    alignItems: 'center',
+  },
+  declineText: {
+    color: colors.textSecondary,
+    fontFamily: typography.families.body,
+  },
+  friendItemWrapper: {
+    paddingHorizontal: spacing[6],
+  },
 });

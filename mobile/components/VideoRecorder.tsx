@@ -5,6 +5,7 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from 'expo-camera';
+import { colors, typography, spacing, radius } from '../theme/tokens';
 
 type RecordingState = 'idle' | 'recording' | 'preview';
 
@@ -41,13 +42,13 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
       <View style={styles.permissionContainer}>
         <Text style={styles.permissionText}>Camera and microphone access required.</Text>
         {!cameraPermission?.granted && (
-          <TouchableOpacity style={styles.button} onPress={requestCameraPermission}>
-            <Text style={styles.buttonText}>Allow Camera</Text>
+          <TouchableOpacity style={styles.permissionButton} onPress={requestCameraPermission}>
+            <Text style={styles.permissionButtonText}>Allow Camera</Text>
           </TouchableOpacity>
         )}
         {!micPermission?.granted && (
-          <TouchableOpacity style={styles.button} onPress={requestMicPermission}>
-            <Text style={styles.buttonText}>Allow Microphone</Text>
+          <TouchableOpacity style={styles.permissionButton} onPress={requestMicPermission}>
+            <Text style={styles.permissionButtonText}>Allow Microphone</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
@@ -99,8 +100,8 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
       <View style={styles.controls}>
         {recordingState === 'idle' && (
           <>
-            <TouchableOpacity style={styles.button} onPress={handleRecord}>
-              <Text style={styles.buttonText}>Record</Text>
+            <TouchableOpacity style={styles.recordButton} onPress={handleRecord}>
+              <Text style={styles.recordButtonText}>Record</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
               <Text style={styles.cancelText}>Cancel</Text>
@@ -110,14 +111,14 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
 
         {recordingState === 'recording' && (
           <TouchableOpacity style={styles.stopButton} onPress={handleStop}>
-            <Text style={styles.buttonText}>Stop</Text>
+            <Text style={styles.stopButtonText}>Stop</Text>
           </TouchableOpacity>
         )}
 
         {recordingState === 'preview' && (
           <>
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Submit</Text>
+            <TouchableOpacity style={styles.recordButton} onPress={handleSubmit}>
+              <Text style={styles.recordButtonText}>Submit</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={handleReRecord}>
               <Text style={styles.cancelText}>Re-record</Text>
@@ -130,38 +131,88 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  camera: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  camera: {
+    flex: 1,
+  },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#000',
+    padding: spacing[6],
+    backgroundColor: colors.bg,
+    gap: spacing[3],
   },
-  permissionText: { color: '#fff', fontSize: 16, textAlign: 'center', marginBottom: 24 },
-  timerContainer: { position: 'absolute', top: 60, alignSelf: 'center' },
-  timer: { color: '#fff', fontSize: 32, fontWeight: 'bold' },
+  permissionText: {
+    color: colors.text,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    textAlign: 'center',
+    marginBottom: spacing[3],
+  },
+  permissionButton: {
+    backgroundColor: colors.ember,
+    paddingHorizontal: spacing[8],
+    paddingVertical: spacing[3],
+    borderRadius: radius.full,
+  },
+  permissionButtonText: {
+    color: colors.bg,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
+  timerContainer: {
+    position: 'absolute',
+    top: 60,
+    alignSelf: 'center',
+  },
+  timer: {
+    color: colors.ember,
+    fontSize: typography.sizes['2xl'],
+    fontFamily: typography.families.bodyBold,
+    fontWeight: 'bold',
+  },
   controls: {
     position: 'absolute',
     bottom: 48,
     width: '100%',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing[3],
   },
-  button: {
-    backgroundColor: '#6B4EFF',
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderRadius: 32,
+  recordButton: {
+    backgroundColor: colors.ember,
+    paddingHorizontal: spacing[10],
+    paddingVertical: spacing[4],
+    borderRadius: radius.full,
+  },
+  recordButtonText: {
+    color: colors.bg,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
   },
   stopButton: {
-    backgroundColor: '#FF4E4E',
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderRadius: 32,
+    backgroundColor: colors.flame,
+    paddingHorizontal: spacing[10],
+    paddingVertical: spacing[4],
+    borderRadius: radius.full,
   },
-  cancelButton: { paddingVertical: 12 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  cancelText: { color: '#aaa', fontSize: 16 },
+  stopButtonText: {
+    color: colors.bg,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    paddingVertical: spacing[3],
+  },
+  cancelText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+  },
 });
