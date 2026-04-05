@@ -47,11 +47,11 @@
 
 ### Reveal Mechanic
 
-- [ ] **REVEAL-01**: User cannot see their friend's video until both have submitted
-- [ ] **REVEAL-02**: When both friends submit, a push notification fires: "Alex answered 👀"
-- [ ] **REVEAL-03**: User taps the notification or reveal card to watch their friend's video
-- [ ] **REVEAL-04**: After watching, the video is deleted from storage
-- [ ] **REVEAL-05**: Reveal-ready friendships are shown first on the home screen
+- [x] **REVEAL-01**: User cannot see their friend's video until both have submitted
+- [x] **REVEAL-02**: When both friends submit, a push notification fires: "Alex answered 👀"
+- [x] **REVEAL-03**: User taps the notification or reveal card to watch their friend's video
+- [x] **REVEAL-04**: After watching, the video is deleted from storage
+- [x] **REVEAL-05**: Reveal-ready friendships are shown first on the home screen
 
 ### Streaks & 24h Window
 
@@ -74,7 +74,7 @@
 - [x] **HOME-01**: Home screen lists all friendships sorted by state priority: Reveal Ready → Your Turn → Waiting
 - [x] **HOME-02**: Each card shows: friend name, streak count, question preview, state CTA
 - [x] **HOME-03**: "Your Turn" cards show time remaining with a countdown
-- [ ] **HOME-04**: "Reveal Ready" cards are visually distinct (highlighted)
+- [x] **HOME-04**: "Reveal Ready" cards are visually distinct (highlighted)
 
 ### Monetization — Sponsored Question Packs
 

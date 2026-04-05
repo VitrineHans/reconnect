@@ -44,7 +44,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Question Engine: DB migration (current_question_id, expires_at, fixed RLS, pg_cron), 54+ seed questions, useQuestion hook, useFriendships hook, home screen data wire-up
 - [x] 02-02-PLAN.md — Video Recording & Upload: install expo-video/expo-file-system/react-native-compressor, VideoRecorder component, useVideoUpload hook (compress→ArrayBuffer→XHR+progress), record screen
-- [ ] 02-03-PLAN.md — Reveal Mechanic: useRevealSubscription (Realtime postgres_changes), VideoPlayer (expo-video + deletion on playToEnd), FriendshipCard component, reveal screen, home screen upgrade
+- [x] 02-03-PLAN.md — Reveal Mechanic: useRevealSubscription (Realtime postgres_changes), VideoPlayer (expo-video + deletion on playToEnd), FriendshipCard component, reveal screen, home screen upgrade
 - [ ] 02-04-PLAN.md — Design System: frontend-design skill, tokens.ts (colours/typography/spacing/radii/shadows), apply to all Phase 1 + Phase 2 screens, FriendshipCard polish
 
 ### Phase 3: Streaks & Notifications
