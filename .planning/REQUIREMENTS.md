@@ -13,19 +13,21 @@
 - [ ] **AUTH-04**: User can log out
 - [ ] **AUTH-05**: New user is prompted to set a username and display name after signup
 
-### Profiles
+### Profiles & Onboarding
 
 - [ ] **PROF-01**: User has a profile with username, display name, and optional avatar
 - [ ] **PROF-02**: User can update their display name and avatar
+- [ ] **PROF-03**: After signup, user completes a short onboarding questionnaire (e.g. interests, hobbies, personality, relationship context) before reaching the home screen
+- [ ] **PROF-04**: Onboarding answers are stored and used by the question selection algorithm to surface more personal, relevant questions for each user
 
 ### Friend System
 
-- [ ] **FRIEND-01**: User can search for another user by username
-- [ ] **FRIEND-02**: User can send a friend invite
-- [ ] **FRIEND-03**: User receives notification of a pending invite
-- [ ] **FRIEND-04**: User can accept or decline a friend invite
-- [ ] **FRIEND-05**: Accepted invite creates a friendship with streak_count = 0
-- [ ] **FRIEND-06**: User can see their list of current friendships
+- [x] **FRIEND-01**: User can search for another user by username
+- [x] **FRIEND-02**: User can send a friend invite
+- [x] **FRIEND-03**: User receives notification of a pending invite
+- [x] **FRIEND-04**: User can accept or decline a friend invite
+- [x] **FRIEND-05**: Accepted invite creates a friendship with streak_count = 0
+- [x] **FRIEND-06**: User can see their list of current friendships
 
 ### Question Loop
 
@@ -61,8 +63,8 @@
 
 ### Push Notifications
 
-- [ ] **PUSH-01**: App registers for push notifications on first launch
-- [ ] **PUSH-02**: Push token stored in user profile
+- [x] **PUSH-01**: App registers for push notifications on first launch
+- [x] **PUSH-02**: Push token stored in user profile
 - [ ] **PUSH-03**: Streak-risk notification fires at 4h remaining (configurable via `STREAK_WARNING_HOURS`)
 - [ ] **PUSH-04**: Reveal-ready notification fires when both friends have answered
 - [ ] **PUSH-05**: Friend invite notification fires when a new invite is received
@@ -124,7 +126,7 @@
 
 | Requirement | Phase |
 |---|---|
-| AUTH-01 to AUTH-05, PROF-01 to PROF-02 | Phase 1 |
+| AUTH-01 to AUTH-05, PROF-01 to PROF-04 | Phase 1 |
 | FRIEND-01 to FRIEND-06 | Phase 1 |
 | LOOP-01 to LOOP-05, VIDEO-01 to VIDEO-05 | Phase 2 |
 | REVEAL-01 to REVEAL-05 | Phase 2 |

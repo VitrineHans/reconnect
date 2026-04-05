@@ -26,7 +26,7 @@ Ship the core loop first, validate retention, then add monetization. Four phases
 
 Plans:
 - [ ] 01-01-PLAN.md — Auth & Profiles: DB migration, Jest setup, OTP auth screens, onboarding wizard, 4-stage auth guard, profile screen
-- [ ] 01-02-PLAN.md — Friend System: push token registration, username search, invite send/accept/decline, friendships list
+- [x] 01-02-PLAN.md — Friend System: push token registration, username search, invite send/accept/decline, friendships list
 
 ### Phase 2: Core Loop
 **Goal**: Two friends can answer a question via video and experience the reveal.
