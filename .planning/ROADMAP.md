@@ -42,10 +42,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: Question Engine — question library seed, selection algorithm, like/dislike
-- [ ] 02-02: Video Recording & Upload — Expo Camera, re-record, compress, signed URL upload
-- [ ] 02-03: Reveal Mechanic — realtime subscription, reveal state, video playback, deletion
-- [ ] 02-04: Design System — colour palette, typography, spacing tokens, friendship card component
+- [ ] 02-01-PLAN.md — Question Engine: DB migration (current_question_id, expires_at, fixed RLS, pg_cron), 54+ seed questions, useQuestion hook, useFriendships hook, home screen data wire-up
+- [ ] 02-02-PLAN.md — Video Recording & Upload: install expo-video/expo-file-system/react-native-compressor, VideoRecorder component, useVideoUpload hook (compress→ArrayBuffer→XHR+progress), record screen
+- [ ] 02-03-PLAN.md — Reveal Mechanic: useRevealSubscription (Realtime postgres_changes), VideoPlayer (expo-video + deletion on playToEnd), FriendshipCard component, reveal screen, home screen upgrade
+- [ ] 02-04-PLAN.md — Design System: frontend-design skill, tokens.ts (colours/typography/spacing/radii/shadows), apply to all Phase 1 + Phase 2 screens, FriendshipCard polish
 
 ### Phase 3: Streaks & Notifications
 **Goal**: The 24h mechanic and push notifications make the app genuinely addictive.
@@ -82,3 +82,4 @@ Plans:
 
 *Roadmap created: 2026-04-04*
 *Phase 1 planned: 2026-04-04 — 2 plans created, execute with `/gsd-execute-phase 1`*
+*Phase 2 planned: 2026-04-05 — 4 plans created, execute with `/gsd-execute-phase 2`*
