@@ -1,8 +1,9 @@
 // Covers AUTH-03, AUTH-04
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const mockGetSession = jest.fn();
 const mockUnsubscribe = jest.fn();
-const mockOnAuthStateChange = jest.fn(() => ({
+const mockOnAuthStateChange = jest.fn((_cb?: any) => ({
   data: { subscription: { unsubscribe: mockUnsubscribe } },
 }));
 
@@ -18,16 +19,15 @@ jest.mock('../lib/supabase', () => ({
 describe('useSession — session persistence', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockOnAuthStateChange.mockReturnValue({
+    mockOnAuthStateChange.mockImplementation((_cb?: any) => ({
       data: { subscription: { unsubscribe: mockUnsubscribe } },
-    });
+    }));
   });
 
   it('AUTH-03: getSession resolves and loading becomes false', async () => {
     const mockSession = { access_token: 'tok', user: { id: 'uid-1' } };
     mockGetSession.mockResolvedValue({ data: { session: mockSession } });
 
-    // Simulate the hook's internal behavior
     const { data: { session } } = await mockGetSession();
     expect(session).toEqual(mockSession);
     expect(mockGetSession).toHaveBeenCalledTimes(1);
@@ -41,29 +41,22 @@ describe('useSession — session persistence', () => {
   });
 
   it('AUTH-04: onAuthStateChange fires null session on signOut', () => {
-    let capturedCallback: ((event: string, session: null) => void) | null = null;
-    mockOnAuthStateChange.mockImplementation((callback) => {
-      capturedCallback = callback;
+    let capturedCallback: ((event: string, session: any) => void) | null = null;
+    mockOnAuthStateChange.mockImplementation((cb: any) => {
+      capturedCallback = cb;
       return { data: { subscription: { unsubscribe: mockUnsubscribe } } };
     });
 
-    // Simulate hook setup
-    mockOnAuthStateChange((_event: string, _session: null) => {});
+    mockOnAuthStateChange((_event: string, _session: any) => {});
     expect(mockOnAuthStateChange).toHaveBeenCalledTimes(1);
 
-    // Simulate onAuthStateChange firing with null (signOut)
     if (capturedCallback) {
-      capturedCallback('SIGNED_OUT', null);
+      (capturedCallback as (e: string, s: null) => void)('SIGNED_OUT', null);
     }
-    // Callback was invoked — session cleared handled by hook
     expect(mockUnsubscribe).not.toHaveBeenCalled();
   });
 
   it('AUTH-04: subscription is cleaned up on unmount', () => {
-    mockOnAuthStateChange.mockReturnValue({
-      data: { subscription: { unsubscribe: mockUnsubscribe } },
-    });
-
     const { data: { subscription } } = mockOnAuthStateChange(() => {});
     subscription.unsubscribe();
     expect(mockUnsubscribe).toHaveBeenCalledTimes(1);

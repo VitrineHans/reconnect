@@ -1,7 +1,7 @@
 // Covers PROF-01, PROF-02, PROF-03, PROF-04
 
 const mockUpdate = jest.fn().mockResolvedValue({ error: null });
-const mockEq = jest.fn(() => ({ error: null }));
+const mockEq = jest.fn().mockResolvedValue({ error: null });
 const mockSingle = jest.fn();
 const mockSelect = jest.fn();
 
