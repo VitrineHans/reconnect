@@ -31,19 +31,19 @@
 
 ### Question Loop
 
-- [ ] **LOOP-01**: Each friendship has one active question at a time
-- [ ] **LOOP-02**: A new question is surfaced per friendship every 24 hours
-- [ ] **LOOP-03**: Question category (funny / deep / personal) is selected by weighted algorithm
-- [ ] **LOOP-04**: Users can like or dislike a question; rating feeds future selection
-- [ ] **LOOP-05**: Questions are not repeated within a friendship
+- [x] **LOOP-01**: Each friendship has one active question at a time
+- [x] **LOOP-02**: A new question is surfaced per friendship every 24 hours
+- [x] **LOOP-03**: Question category (funny / deep / personal) is selected by weighted algorithm
+- [x] **LOOP-04**: Users can like or dislike a question; rating feeds future selection
+- [x] **LOOP-05**: Questions are not repeated within a friendship
 
 ### Video Recording & Upload
 
-- [ ] **VIDEO-01**: User can record a short video answer (max 30 seconds)
-- [ ] **VIDEO-02**: User can re-record before submitting
-- [ ] **VIDEO-03**: Video is uploaded to Supabase Storage with a signed URL
-- [ ] **VIDEO-04**: Video is compressed before upload
-- [ ] **VIDEO-05**: Upload progress is shown to the user
+- [x] **VIDEO-01**: User can record a short video answer (max 30 seconds)
+- [x] **VIDEO-02**: User can re-record before submitting
+- [x] **VIDEO-03**: Video is uploaded to Supabase Storage with a signed URL
+- [x] **VIDEO-04**: Video is compressed before upload
+- [x] **VIDEO-05**: Upload progress is shown to the user
 
 ### Reveal Mechanic
 
@@ -71,9 +71,9 @@
 
 ### Home Screen
 
-- [ ] **HOME-01**: Home screen lists all friendships sorted by state priority: Reveal Ready → Your Turn → Waiting
-- [ ] **HOME-02**: Each card shows: friend name, streak count, question preview, state CTA
-- [ ] **HOME-03**: "Your Turn" cards show time remaining with a countdown
+- [x] **HOME-01**: Home screen lists all friendships sorted by state priority: Reveal Ready → Your Turn → Waiting
+- [x] **HOME-02**: Each card shows: friend name, streak count, question preview, state CTA
+- [x] **HOME-03**: "Your Turn" cards show time remaining with a countdown
 - [ ] **HOME-04**: "Reveal Ready" cards are visually distinct (highlighted)
 
 ### Monetization — Sponsored Question Packs
