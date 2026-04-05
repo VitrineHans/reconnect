@@ -7,7 +7,7 @@ Ship the core loop first, validate retention, then add monetization. Four phases
 ## Phases
 
 - [ ] **Phase 1: Foundation** - Auth, onboarding questionnaire, profiles, and friend invite system
-- [ ] **Phase 2: Core Loop** - Video recording, question engine, reveal mechanic, and design system
+- [x] **Phase 2: Core Loop** - Video recording, question engine, reveal mechanic, and design system (completed 2026-04-05)
 - [ ] **Phase 3: Streaks & Notifications** - 24h streak engine and push notifications
 - [ ] **Phase 4: Monetization v1** - Sponsored question packs and friendship gifts
 
@@ -45,7 +45,7 @@ Plans:
 - [x] 02-01-PLAN.md — Question Engine: DB migration (current_question_id, expires_at, fixed RLS, pg_cron), 54+ seed questions, useQuestion hook, useFriendships hook, home screen data wire-up
 - [x] 02-02-PLAN.md — Video Recording & Upload: install expo-video/expo-file-system/react-native-compressor, VideoRecorder component, useVideoUpload hook (compress→ArrayBuffer→XHR+progress), record screen
 - [x] 02-03-PLAN.md — Reveal Mechanic: useRevealSubscription (Realtime postgres_changes), VideoPlayer (expo-video + deletion on playToEnd), FriendshipCard component, reveal screen, home screen upgrade
-- [ ] 02-04-PLAN.md — Design System: frontend-design skill, tokens.ts (colours/typography/spacing/radii/shadows), apply to all Phase 1 + Phase 2 screens, FriendshipCard polish
+- [x] 02-04-PLAN.md — Design System: frontend-design skill, tokens.ts (colours/typography/spacing/radii/shadows), apply to all Phase 1 + Phase 2 screens, FriendshipCard polish
 
 ### Phase 3: Streaks & Notifications
 **Goal**: The 24h mechanic and push notifications make the app genuinely addictive.

@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 02-03-PLAN.md
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-04-05T08:38:43.402Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-04-05T08:53:39.533Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 83
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -52,6 +52,8 @@ Overall: 4/10 plans complete (40%)
 - [Phase 02]: Signed URL expiry 300s (5min) — not stored in DB; generated fresh at reveal time
 - [Phase 02]: hasWatchedRef guards double-deletion in VideoPlayer on playToEnd
 - [Phase 02]: FriendshipCard countdown interval 60s (not 1s) for battery efficiency
+- [Phase 02]: Fraunces 700 Bold for display font — warm literary serif, avoids generic AI defaults
+- [Phase 02]: FriendshipCard streak badge always visible (even at 0) to match test contract
 
 ## Blockers
 
@@ -64,8 +66,9 @@ None.
 | 02 | 02-02 | 7 | 2 | 7 |
 | Phase 02 P01 | 6 | 3 tasks | 12 files |
 | Phase 02 P03 | 8 | 3 tasks | 9 files |
+| Phase 02 P04 | 25 | 3 tasks | 13 files |
 
 ## Last Session
 
-- **Stopped at:** Completed 02-03-PLAN.md
+- **Stopped at:** Completed 02-04-PLAN.md
 - **Timestamp:** 2026-04-05T08:26:23Z
