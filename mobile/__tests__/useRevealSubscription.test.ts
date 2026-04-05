@@ -5,19 +5,21 @@ import { renderHook, act } from '@testing-library/react-native';
 // Track call order for .on() vs .subscribe()
 const callOrder: string[] = [];
 
-const mockSubscribe = jest.fn(() => {
-  callOrder.push('subscribe');
-  return mockChannel;
-});
+type MockChannel = {
+  on: jest.Mock;
+  subscribe: jest.Mock;
+};
 
-const mockOn = jest.fn((_event: string, _opts: unknown, _cb: unknown) => {
-  callOrder.push('on');
-  return mockChannel;
-});
-
-const mockChannel = {
-  on: mockOn,
-  subscribe: mockSubscribe,
+// Declared with explicit type to break circular inference
+const mockChannel: MockChannel = {
+  on: jest.fn((_event: string, _opts: unknown, _cb: unknown): MockChannel => {
+    callOrder.push('on');
+    return mockChannel;
+  }),
+  subscribe: jest.fn((): MockChannel => {
+    callOrder.push('subscribe');
+    return mockChannel;
+  }),
 };
 
 const mockRemoveChannel = jest.fn();
@@ -53,11 +55,11 @@ describe('useRevealSubscription', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     callOrder.length = 0;
-    mockOn.mockImplementation((_event: string, _opts: unknown, _cb: unknown) => {
+    mockChannel.on.mockImplementation((_event: string, _opts: unknown, _cb: unknown): MockChannel => {
       callOrder.push('on');
       return mockChannel;
     });
-    mockSubscribe.mockImplementation(() => {
+    mockChannel.subscribe.mockImplementation((): MockChannel => {
       callOrder.push('subscribe');
       return mockChannel;
     });
@@ -79,7 +81,7 @@ describe('useRevealSubscription', () => {
     setupQueryResult([{ user_id: 'user-a' }]);
 
     let insertCallback: ((payload: unknown) => void) | undefined;
-    mockOn.mockImplementation((_event, _opts, cb) => {
+    mockChannel.on.mockImplementation((_event: string, _opts: unknown, cb: unknown): MockChannel => {
       callOrder.push('on');
       insertCallback = cb as (payload: unknown) => void;
       return mockChannel;
@@ -101,7 +103,7 @@ describe('useRevealSubscription', () => {
     setupQueryResult([{ user_id: 'user-a' }, { user_id: 'user-b' }]);
 
     let insertCallback: ((payload: unknown) => void) | undefined;
-    mockOn.mockImplementation((_event, _opts, cb) => {
+    mockChannel.on.mockImplementation((_event: string, _opts: unknown, cb: unknown): MockChannel => {
       callOrder.push('on');
       insertCallback = cb as (payload: unknown) => void;
       return mockChannel;
