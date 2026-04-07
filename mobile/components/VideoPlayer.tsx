@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Platform } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Audio } from 'expo-av';
 import { supabase } from '../lib/supabase';
 import { colors, typography, spacing } from '../theme/tokens';
 
@@ -50,25 +49,18 @@ function WatchedOverlay() {
   );
 }
 
-function TapToWatchOverlay({ onPress }: { onPress: () => void }) {
-  return (
-    <TouchableOpacity style={styles.tapOverlay} onPress={onPress} activeOpacity={0.85}>
-      <View style={styles.playButton}>
-        <Text style={styles.playIcon}>▶</Text>
-      </View>
-      <Text style={styles.tapHint}>Tap to watch</Text>
-    </TouchableOpacity>
-  );
-}
-
-// ── Web player ─────────────────────────────────────────────────────────────
-// Use state-controlled autoPlay — rendering <video autoPlay> inside a user
-// gesture handler satisfies the browser's autoplay policy reliably.
+// ── Web player ──────────────────────────────────────────────────────────────
+// The <video> element is always in the DOM (so it can load the source).
+// We overlay a tap button on top. On tap we call play() directly on the
+// element via a callback ref — this counts as a direct user gesture so
+// browsers allow unmuted autoplay.
 
 function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
   const [done, setDone] = useState(false);
   const [started, setStarted] = useState(false);
+  // Callback ref: always has the current DOM element, no stale-ref issues.
+  const videoElRef = useRef<HTMLVideoElement | null>(null);
 
   function handleEnded() {
     if (hasWatchedRef.current) return;
@@ -77,27 +69,39 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
     completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
   }
 
+  function handleTap() {
+    setStarted(true);
+    videoElRef.current?.play();
+  }
+
   if (done) return <WatchedOverlay />;
 
   return (
     <View style={styles.container}>
-      {started ? (
-        // @ts-ignore — raw <video> element on web
-        <video
-          src={signedUrl}
-          autoPlay
-          playsInline
-          onEnded={handleEnded}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000' }}
-        />
-      ) : (
-        <TapToWatchOverlay onPress={() => setStarted(true)} />
+      {/* @ts-ignore */}
+      <video
+        ref={(el: HTMLVideoElement | null) => { videoElRef.current = el; }}
+        src={signedUrl}
+        playsInline
+        onEnded={handleEnded}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000', display: 'block' }}
+      />
+      {!started && (
+        <TouchableOpacity style={styles.tapOverlay} onPress={handleTap} activeOpacity={0.85}>
+          <View style={styles.playButton}>
+            <Text style={styles.playIcon}>▶</Text>
+          </View>
+          <Text style={styles.tapHint}>Tap to watch</Text>
+        </TouchableOpacity>
       )}
     </View>
   );
 }
 
-// ── Native player ──────────────────────────────────────────────────────────
+// ── Native player ───────────────────────────────────────────────────────────
+// expo-video manages its own AVAudioSession — do NOT call Audio.setAudioModeAsync,
+// it interferes. The original working version just called p.play() in the
+// useVideoPlayer callback and sound worked out of the box.
 
 function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
@@ -105,9 +109,8 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
   const [started, setStarted] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
 
-  const player = useVideoPlayer(signedUrl, (p) => {
-    p.muted = false;
-  });
+  // Load but don't auto-play — wait for tap.
+  const player = useVideoPlayer(signedUrl, (_p) => {});
 
   useEffect(() => {
     const endSub = player.addListener('playToEnd', () => {
@@ -122,17 +125,7 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
     return () => { endSub.remove(); statusSub.remove(); };
   }, [player, storagePath, friendshipId, questionId, onWatched]);
 
-  async function handleTapToPlay() {
-    // Set audio session immediately before play() so expo-video can't override it.
-    // allowsRecordingIOS:false resets expo-camera's playAndRecord session.
-    // playsInSilentModeIOS:true plays audio even when the silent switch is on.
-    try {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-      });
-    } catch {}
+  function handleTap() {
     setStarted(true);
     player.play();
   }
@@ -143,12 +136,17 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
   return (
     <View style={styles.container}>
       <VideoView player={player} style={styles.video} nativeControls={false} contentFit="contain" />
-      {!started && <TapToWatchOverlay onPress={handleTapToPlay} />}
+      {!started && (
+        <TouchableOpacity style={styles.tapOverlay} onPress={handleTap} activeOpacity={0.85}>
+          <View style={styles.playButton}>
+            <Text style={styles.playIcon}>▶</Text>
+          </View>
+          <Text style={styles.tapHint}>Tap to watch</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
-
-// ── Export ─────────────────────────────────────────────────────────────────
 
 export function VideoPlayer(props: VideoPlayerProps) {
   if (Platform.OS === 'web') return <WebVideoPlayer {...props} />;
@@ -159,7 +157,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   video: { flex: 1 },
   overlay: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', padding: spacing[6] },
-  tapOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  tapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
   playButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.ember, justifyContent: 'center', alignItems: 'center', marginBottom: spacing[4] },
   playIcon: { color: '#fff', fontSize: 32, marginLeft: 6 },
   tapHint: { color: '#fff', fontSize: typography.sizes.base, fontFamily: typography.families.bodyMedium },
