@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { supabase } from '../lib/supabase';
 import { colors, typography, spacing } from '../theme/tokens';
@@ -41,71 +41,7 @@ async function completeReveal(
   await supabase.rpc('rotate_daily_questions');
 }
 
-function WatchedOverlay() {
-  return (
-    <View style={styles.overlay}>
-      <ActivityIndicator color={colors.ember} />
-    </View>
-  );
-}
-
-// ── Web player ──────────────────────────────────────────────────────────────
-// autoPlay+muted always works — no gesture needed. We show a tap-to-unmute
-// overlay. On tap we unmute and restart from the beginning.
-
-function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
-  const hasWatchedRef = useRef(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [done, setDone] = useState(false);
-  const [playing, setPlaying] = useState(false);
-
-  function handleEnded() {
-    if (hasWatchedRef.current) return;
-    hasWatchedRef.current = true;
-    setDone(true);
-    completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
-  }
-
-  // Called from a real browser click — browsers allow unmuted play from user gestures.
-  function handleTapToPlay() {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = false;
-    v.play().catch(() => {});
-    setPlaying(true);
-  }
-
-  if (done) return <WatchedOverlay />;
-
-  return (
-    <View style={styles.container}>
-      {/* @ts-ignore — <video> is valid JSX on web */}
-      <video
-        ref={(el: HTMLVideoElement | null) => { videoRef.current = el; }}
-        src={signedUrl}
-        playsInline
-        onEnded={handleEnded}
-        style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000', display: 'block' }}
-      />
-      {!playing && (
-        <TouchableOpacity style={styles.tapOverlay} onPress={handleTapToPlay} activeOpacity={0.85}>
-          <View style={styles.muteBtn}>
-            <Text style={styles.muteIcon}>▶</Text>
-          </View>
-          <Text style={styles.tapHint}>Tap to watch</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-}
-
-// ── Native player ───────────────────────────────────────────────────────────
-// expo-video with nativeControls={true} uses AVAudioSessionCategoryPlayback
-// which overrides the silent switch and gives full sound. A transparent View
-// on top absorbs all touch events so the user can't see or interact with the
-// native controls — they auto-hide since they never receive a tap.
-
-function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
+export function VideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
   const [done, setDone] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
@@ -117,7 +53,6 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
   useEffect(() => {
     const endSub = player.addListener('playToEnd', () => {
       if (hasWatchedRef.current) return;
-      // Guard against spurious early fires
       if (player.currentTime < 1) return;
       hasWatchedRef.current = true;
       setDone(true);
@@ -129,25 +64,29 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
     return () => { endSub.remove(); statusSub.remove(); };
   }, [player, storagePath, friendshipId, questionId, onWatched]);
 
-  if (done) return <WatchedOverlay />;
-  if (playError) return <View style={styles.overlay}><Text style={styles.errorText}>{playError}</Text></View>;
+  if (done) {
+    return (
+      <View style={styles.overlay}>
+        <ActivityIndicator color={colors.ember} />
+      </View>
+    );
+  }
+
+  if (playError) {
+    return (
+      <View style={styles.overlay}>
+        <Text style={styles.errorText}>{playError}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <VideoView player={player} style={styles.video} nativeControls contentFit="contain" />
-      {/*
-        Transparent overlay that claims the touch responder.
-        This prevents taps from reaching the native controls underneath,
-        so the controls never appear and the user can't pause or scrub.
-      */}
+      {/* Transparent overlay absorbs all touches — hides native controls */}
       <View style={StyleSheet.absoluteFillObject} onStartShouldSetResponder={() => true} />
     </View>
   );
-}
-
-export function VideoPlayer(props: VideoPlayerProps) {
-  if (Platform.OS === 'web') return <WebVideoPlayer {...props} />;
-  return <NativeVideoPlayer {...props} />;
 }
 
 const styles = StyleSheet.create({
@@ -159,27 +98,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing[6],
-  },
-  tapOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
-  muteBtn: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.ember,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing[3],
-  },
-  muteIcon: { fontSize: 28 },
-  tapHint: {
-    color: '#fff',
-    fontSize: typography.sizes.base,
-    fontFamily: typography.families.bodyMedium,
   },
   errorText: {
     color: colors.flame,
