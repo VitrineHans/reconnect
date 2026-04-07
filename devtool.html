@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reconnect — Dev Tool</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0d0b09; color: #f0ece6; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px 16px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #888; margin-bottom: 32px; }
+  .card { background: #1a1714; border: 1px solid #2e2a26; border-radius: 12px; padding: 24px; width: 100%; max-width: 480px; margin-bottom: 20px; }
+  label { font-size: 13px; color: #aaa; display: block; margin-bottom: 6px; }
+  input { width: 100%; padding: 10px 12px; background: #111; border: 1px solid #333; border-radius: 8px; color: #f0ece6; font-size: 15px; }
+  button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+  .btn-primary { background: #e85d26; color: #0d0b09; }
+  .btn-primary:disabled { background: #5a2810; color: #666; cursor: not-allowed; }
+  .btn-secondary { background: #2e2a26; color: #f0ece6; }
+  .status { font-size: 13px; color: #888; margin-top: 10px; min-height: 18px; }
+  .status.ok { color: #4caf50; }
+  .status.err { color: #e85d26; }
+  video { width: 100%; border-radius: 8px; background: #000; margin: 12px 0; }
+  .question-text { font-size: 18px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; background: #2e2a26; color: #aaa; margin-bottom: 16px; }
+  #section-login, #section-otp, #section-home, #section-record, #section-watch { display: none; }
+  .state-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .reveal { color: #f5c842; }
+  .yourturn { color: #e85d26; }
+  .waiting { color: #555; }
+  progress { width: 100%; height: 8px; border-radius: 4px; margin-top: 8px; accent-color: #e85d26; }
+</style>
+</head>
+<body>
+
+<h1>Reconnect</h1>
+<p class="sub">Dev testing tool — native app only builds</p>
+
+<!-- LOGIN -->
+<div class="card" id="section-login">
+  <label>Phone number (e.g. +31612345678)</label>
+  <input id="phone" type="tel" placeholder="+31..." />
+  <button class="btn-primary" onclick="sendOtp()">Send OTP</button>
+  <p class="status" id="login-status"></p>
+</div>
+
+<!-- OTP -->
+<div class="card" id="section-otp">
+  <label>Enter the 6-digit code</label>
+  <input id="otp" type="number" placeholder="123456" maxlength="6" />
+  <button class="btn-primary" onclick="verifyOtp()">Verify</button>
+  <p class="status" id="otp-status"></p>
+</div>
+
+<!-- HOME -->
+<div class="card" id="section-home">
+  <p class="sub" id="home-user"></p>
+  <div id="friendship-list"></div>
+  <button class="btn-secondary" style="margin-top:16px" onclick="signOut()">Sign out</button>
+</div>
+
+<!-- RECORD -->
+<div class="card" id="section-record">
+  <div class="badge" id="record-category"></div>
+  <p class="question-text" id="record-question"></p>
+  <video id="preview" autoplay muted playsinline></video>
+  <button class="btn-secondary" id="btn-record" onclick="toggleRecord()">Start recording</button>
+  <button class="btn-primary" id="btn-submit" onclick="submitVideo()" style="display:none">Submit answer</button>
+  <button class="btn-secondary" onclick="showHome()" style="margin-top:8px">← Back</button>
+  <progress id="upload-progress" value="0" max="100" style="display:none"></progress>
+  <p class="status" id="record-status"></p>
+</div>
+
+<!-- WATCH -->
+<div class="card" id="section-watch">
+  <p class="sub">Watch their answer — you can only watch once</p>
+  <video id="watch-video" controls playsinline style="max-height:420px"></video>
+  <p class="status" id="watch-status"></p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://nlhpfatnuzcbhzagyssc.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_-dNS9ZsUnCwHAYFjBbnhHQ_gQQrbWid';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let currentFriendshipId = null;
+let currentQuestionId = null;
+let currentStoragePath = null;
+let mediaStream = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showHome();
+  } else {
+    show('section-login');
+  }
+}
+
+async function sendOtp() {
+  const phone = document.getElementById('phone').value.trim();
+  setStatus('login-status', 'Sending...', '');
+  const { error } = await sb.auth.signInWithOtp({ phone });
+  if (error) { setStatus('login-status', error.message, 'err'); return; }
+  setStatus('login-status', 'Code sent!', 'ok');
+  show('section-otp');
+}
+
+async function verifyOtp() {
+  const phone = document.getElementById('phone').value.trim();
+  const token = document.getElementById('otp').value.trim();
+  setStatus('otp-status', 'Verifying...', '');
+  const { data, error } = await sb.auth.verifyOtp({ phone, token, type: 'sms' });
+  if (error) { setStatus('otp-status', error.message, 'err'); return; }
+  currentUser = data.user;
+  showHome();
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  currentUser = null;
+  show('section-login');
+}
+
+// ── Home ──────────────────────────────────────────────────────────────────────
+
+async function showHome() {
+  show('section-home');
+  document.getElementById('home-user').textContent = `Logged in as ${currentUser.phone ?? currentUser.email}`;
+  await loadFriendships();
+}
+
+async function loadFriendships() {
+  const list = document.getElementById('friendship-list');
+  list.innerHTML = '<p class="status">Loading...</p>';
+
+  const userId = currentUser.id;
+
+  const { data: friendships, error } = await sb
+    .from('friendships')
+    .select('id, streak_count, user_a, user_b, current_question_id, questions!current_question_id(text, category)')
+    .or(`user_a.eq.${userId},user_b.eq.${userId}`);
+
+  if (error || !friendships?.length) {
+    list.innerHTML = '<p class="status err">' + (error?.message ?? 'No friendships found') + '</p>';
+    return;
+  }
+
+  const friendIds = friendships.map(f => f.user_a === userId ? f.user_b : f.user_a);
+  const { data: profiles } = await sb.from('profiles').select('id, display_name, username').in('id', friendIds);
+  const profileMap = {};
+  (profiles ?? []).forEach(p => profileMap[p.id] = p.display_name ?? p.username);
+
+  // Load responses for these friendships
+  const fIds = friendships.map(f => f.id);
+  const { data: responses } = await sb
+    .from('question_responses')
+    .select('id, user_id, friendship_id, question_id, video_url, watched_at')
+    .in('friendship_id', fIds);
+
+  list.innerHTML = '';
+
+  for (const f of friendships) {
+    const friendId = f.user_a === userId ? f.user_b : f.user_a;
+    const friendName = profileMap[friendId] ?? friendId;
+    const fResponses = (responses ?? []).filter(r => r.friendship_id === f.id && r.question_id === f.current_question_id);
+    const myResponse = fResponses.find(r => r.user_id === userId);
+    const friendResponse = fResponses.find(r => r.user_id !== userId);
+    const bothSubmitted = fResponses.length === 2;
+    const iWatched = friendResponse?.watched_at != null;
+
+    let stateLabel, stateClass, btnLabel, btnAction;
+    if (bothSubmitted && !iWatched) {
+      stateLabel = '👀 Watch now'; stateClass = 'reveal';
+      btnLabel = 'Watch'; btnAction = () => watchVideo(f.id, f.current_question_id, userId, friendResponse);
+    } else if (!myResponse) {
+      stateLabel = '⏳ Your turn'; stateClass = 'yourturn';
+      btnLabel = 'Record answer'; btnAction = () => startRecord(f.id, f.current_question_id, f.questions);
+    } else {
+      stateLabel = '💤 Waiting'; stateClass = 'waiting';
+      btnLabel = null;
+    }
+
+    const div = document.createElement('div');
+    div.style.cssText = 'border-top:1px solid #2e2a26;padding-top:16px;margin-top:16px;';
+    div.innerHTML = `
+      <p class="state-label ${stateClass}">${stateLabel}</p>
+      <p style="font-size:15px;font-weight:600;margin-bottom:4px">${friendName} &nbsp; 🔥 ${f.streak_count}</p>
+      ${f.questions ? `<p style="font-size:13px;color:#aaa;font-style:italic;margin-bottom:12px">"${f.questions.text}"</p>` : ''}
+    `;
+    if (btnLabel) {
+      const btn = document.createElement('button');
+      btn.className = stateClass === 'reveal' ? 'btn-primary' : 'btn-secondary';
+      btn.style.cssText = 'width:auto;padding:8px 20px;';
+      btn.textContent = btnLabel;
+      btn.onclick = btnAction;
+      div.appendChild(btn);
+    }
+    list.appendChild(div);
+  }
+}
+
+// ── Record ────────────────────────────────────────────────────────────────────
+
+async function startRecord(friendshipId, questionId, question) {
+  currentFriendshipId = friendshipId;
+  currentQuestionId = questionId;
+  document.getElementById('record-question').textContent = question?.text ?? '';
+  document.getElementById('record-category').textContent = question?.category ?? '';
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('upload-progress').style.display = 'none';
+  setStatus('record-status', '', '');
+  recordedChunks = [];
+
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById('preview').srcObject = mediaStream;
+  } catch (e) {
+    setStatus('record-status', 'Camera access denied: ' + e.message, 'err');
+    return;
+  }
+
+  show('section-record');
+}
+
+function toggleRecord() {
+  if (!isRecording) {
+    recordedChunks = [];
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+      ? 'video/webm;codecs=vp9,opus'
+      : MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
+    mediaRecorder = new MediaRecorder(mediaStream, { mimeType });
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+      const url = URL.createObjectURL(blob);
+      const preview = document.getElementById('preview');
+      preview.srcObject = null;
+      preview.src = url;
+      preview.muted = false;
+      preview.play();
+      document.getElementById('btn-submit').style.display = 'block';
+      document.getElementById('btn-record').textContent = 'Re-record';
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    document.getElementById('btn-record').textContent = 'Stop recording';
+    setStatus('record-status', '● Recording...', 'err');
+  } else {
+    mediaRecorder.stop();
+    isRecording = false;
+    setStatus('record-status', '', '');
+  }
+}
+
+async function submitVideo() {
+  if (!recordedChunks.length) return;
+  const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+  const ext = blob.type.includes('webm') ? 'webm' : 'mp4';
+  const storagePath = `videos/${currentFriendshipId}/${currentUser.id}/${currentQuestionId}.${ext}`;
+
+  setStatus('record-status', 'Uploading...', '');
+  document.getElementById('btn-submit').disabled = true;
+  const prog = document.getElementById('upload-progress');
+  prog.style.display = 'block';
+  prog.value = 0;
+
+  try {
+    // Get signed upload URL
+    const { data: urlData, error: urlErr } = await sb.storage.from('videos').createSignedUploadUrl(storagePath, { upsert: true });
+    if (urlErr) throw new Error(urlErr.message);
+
+    // Upload with XHR for progress
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', urlData.signedUrl);
+      xhr.setRequestHeader('Content-Type', blob.type);
+      xhr.setRequestHeader('x-upsert', 'true');
+      xhr.upload.onprogress = e => { if (e.lengthComputable) prog.value = (e.loaded / e.total) * 100; };
+      xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error(xhr.status));
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send(blob);
+    });
+
+    // Insert response row
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { error: insertErr } = await sb.from('question_responses').insert({
+      friendship_id: currentFriendshipId,
+      question_id: currentQuestionId,
+      user_id: currentUser.id,
+      video_url: storagePath,
+      expires_at: expiresAt,
+    });
+    if (insertErr) throw new Error(insertErr.message);
+
+    // Increment streak
+    const { data: friendship } = await sb.from('friendships').select('streak_count').eq('id', currentFriendshipId).single();
+    await sb.from('friendships').update({
+      streak_count: (friendship?.streak_count ?? 0) + 1,
+      last_answered_at: new Date().toISOString(),
+    }).eq('id', currentFriendshipId);
+
+    setStatus('record-status', 'Submitted! ✓', 'ok');
+    stopCamera();
+    setTimeout(() => showHome(), 1000);
+  } catch (e) {
+    setStatus('record-status', e.message, 'err');
+    document.getElementById('btn-submit').disabled = false;
+  }
+}
+
+// ── Watch ─────────────────────────────────────────────────────────────────────
+
+async function watchVideo(friendshipId, questionId, userId, friendResponse) {
+  currentFriendshipId = friendshipId;
+  currentQuestionId = questionId;
+  currentStoragePath = friendResponse.video_url;
+
+  setStatus('watch-status', 'Loading video...', '');
+  show('section-watch');
+
+  const { data: urlData, error } = await sb.storage.from('videos').createSignedUrl(friendResponse.video_url, 300);
+  if (error || !urlData?.signedUrl) {
+    setStatus('watch-status', 'Could not load video: ' + (error?.message ?? 'unknown'), 'err');
+    return;
+  }
+
+  const video = document.getElementById('watch-video');
+  video.src = urlData.signedUrl;
+  video.onended = () => completeReveal(friendshipId, questionId, friendResponse.video_url, userId);
+  setStatus('watch-status', '', '');
+}
+
+async function completeReveal(friendshipId, questionId, storagePath, userId) {
+  setStatus('watch-status', 'Saving...', '');
+
+  await sb.from('question_responses')
+    .update({ watched_at: new Date().toISOString() })
+    .eq('friendship_id', friendshipId)
+    .eq('question_id', questionId)
+    .eq('video_url', storagePath);
+
+  const { data: responses } = await sb.from('question_responses')
+    .select('id, video_url, watched_at')
+    .eq('friendship_id', friendshipId)
+    .eq('question_id', questionId);
+
+  const bothWatched = responses?.length === 2 && responses.every(r => r.watched_at);
+  if (bothWatched) {
+    const paths = responses.map(r => r.video_url);
+    await sb.storage.from('videos').remove(paths);
+    await sb.from('question_responses').delete().eq('friendship_id', friendshipId).eq('question_id', questionId);
+    await sb.from('friendships').update({ current_question_id: null }).eq('id', friendshipId);
+    await sb.rpc('rotate_daily_questions');
+    setStatus('watch-status', 'Done! Next question loading...', 'ok');
+  } else {
+    setStatus('watch-status', 'Watched ✓ — waiting for the other person', 'ok');
+  }
+
+  setTimeout(() => showHome(), 1500);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function show(id) {
+  ['section-login','section-otp','section-home','section-record','section-watch'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function setStatus(id, msg, cls) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status ' + cls;
+}
+
+function stopCamera() {
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+}
+
+init();
+</script>
+</body>
+</html>
