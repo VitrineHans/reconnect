@@ -1,7 +1,4 @@
 import { useState } from 'react';
-import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system/legacy';
-import { decode } from 'base64-arraybuffer';
 import { supabase } from '../lib/supabase';
 
 export type UploadState = {
@@ -11,21 +8,20 @@ export type UploadState = {
 };
 
 async function getArrayBuffer(uri: string): Promise<{ buffer: ArrayBuffer; contentType: string }> {
-  if (Platform.OS === 'web') {
-    // On web, uri is a blob: URL — fetch it directly.
-    // Content-Type reflects the mimeType set when the Blob was created.
-    const response = await fetch(uri);
-    const contentType = response.headers.get('content-type') ?? 'video/webm';
-    const buffer = await response.arrayBuffer();
-    return { buffer, contentType };
+  // Works for both blob: URLs (web) and file:// URIs (native).
+  // React Native's fetch implementation handles file:// URIs natively.
+  const response = await fetch(uri);
+  const buffer = await response.arrayBuffer();
+
+  // On web the blob carries the real MIME type; on native infer from extension.
+  const headerType = response.headers.get('content-type') ?? '';
+  if (headerType && !headerType.includes('application/octet-stream') && !headerType.includes('text/plain')) {
+    return { buffer, contentType: headerType };
   }
-  // Native: detect actual format from URI extension (.mov on iOS, .mp4 on Android)
-  const ext = uri.split('.').pop()?.toLowerCase() ?? 'mp4';
-  const contentType = ext === 'mov' ? 'video/quicktime' : 'video/mp4';
-  const base64 = await FileSystem.readAsStringAsync(uri, {
-    encoding: 'base64' as FileSystem.EncodingType,
-  });
-  return { buffer: decode(base64), contentType };
+
+  const ext = uri.split('?')[0].split('.').pop()?.toLowerCase() ?? 'mp4';
+  const contentType = ext === 'mov' ? 'video/quicktime' : ext === 'webm' ? 'video/webm' : 'video/mp4';
+  return { buffer, contentType };
 }
 
 function uploadWithProgress(
