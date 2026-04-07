@@ -23,7 +23,7 @@ export default function RecordScreen() {
 
     try {
       const storagePath = await upload(id, session.user.id, questionId, uri);
-      await insertResponse(id, questionId, session.user.id, storagePath);
+      await insertResponseAndStreak(id, questionId, session.user.id, storagePath);
       router.replace('/(tabs)/home');
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : 'Upload failed');
@@ -31,7 +31,7 @@ export default function RecordScreen() {
     }
   }
 
-  async function insertResponse(
+  async function insertResponseAndStreak(
     friendshipId: string,
     qId: string,
     userId: string,
@@ -47,28 +47,21 @@ export default function RecordScreen() {
     });
     if (error) throw new Error(error.message);
 
-    // If the partner already submitted, both are in — increment streak now
-    const { data: responses } = await supabase
-      .from('question_responses')
-      .select('user_id')
-      .eq('friendship_id', friendshipId)
-      .eq('question_id', qId);
+    // Increment streak immediately when this user sends their answer.
+    // This gives instant feedback — streak goes up the moment you participate.
+    const { data: friendship } = await supabase
+      .from('friendships')
+      .select('streak_count')
+      .eq('id', friendshipId)
+      .single();
 
-    if ((responses?.length ?? 0) === 2) {
-      const { data: friendship } = await supabase
-        .from('friendships')
-        .select('streak_count')
-        .eq('id', friendshipId)
-        .single();
-
-      await supabase
-        .from('friendships')
-        .update({
-          streak_count: (friendship?.streak_count ?? 0) + 1,
-          last_answered_at: new Date().toISOString(),
-        })
-        .eq('id', friendshipId);
-    }
+    await supabase
+      .from('friendships')
+      .update({
+        streak_count: (friendship?.streak_count ?? 0) + 1,
+        last_answered_at: new Date().toISOString(),
+      })
+      .eq('id', friendshipId);
   }
 
   function handleRetry() {

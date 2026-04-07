@@ -9,14 +9,13 @@ export type UploadState = {
 
 async function getArrayBuffer(uri: string): Promise<{ buffer: ArrayBuffer; contentType: string }> {
   // Works for both blob: URLs (web) and file:// URIs (native).
-  // React Native's fetch implementation handles file:// URIs natively.
+  // React Native's fetch handles file:// URIs natively.
   const response = await fetch(uri);
   const buffer = await response.arrayBuffer();
 
   // Web blob URLs carry the real MIME type from the MediaRecorder.
   // Native file:// URIs report application/octet-stream — always upload as
-  // video/mp4 so browsers can play back iOS .mov recordings (H.264 codec is
-  // compatible; only the container name differs).
+  // video/mp4 (H.264 from .mov is compatible; only the container name differs).
   const headerType = response.headers.get('content-type') ?? '';
   const isWebBlob = uri.startsWith('blob:');
   if (isWebBlob && headerType && !headerType.includes('octet-stream')) {

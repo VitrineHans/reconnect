@@ -18,6 +18,7 @@ export interface FriendshipWithState {
   state: FriendshipState;
   expiresAt: string | null;
   myResponseId: string | null;
+  currentQuestionId: string | null;
 }
 
 const STATE_PRIORITY: Record<FriendshipState, number> = {
@@ -29,6 +30,7 @@ const STATE_PRIORITY: Record<FriendshipState, number> = {
 interface RawResponse {
   id: string;
   user_id: string;
+  question_id: string;
   watched_at: string | null;
   expires_at: string | null;
 }
@@ -53,7 +55,7 @@ async function fetchFriendshipsWithState(userId: string): Promise<FriendshipWith
       user_b,
       current_question_id,
       questions!current_question_id ( text ),
-      question_responses ( id, user_id, watched_at, expires_at )
+      question_responses ( id, user_id, question_id, watched_at, expires_at )
     `)
     .or(`user_a.eq.${userId},user_b.eq.${userId}`);
 
@@ -96,20 +98,35 @@ function buildFriendshipWithState(
   profileMap: Map<string, FriendProfile>,
 ): FriendshipWithState {
   const friendId = f.user_a === userId ? f.user_b : f.user_a;
-  const responses = f.question_responses ?? [];
-  const myResponse = responses.find((r) => r.user_id === userId) ?? null;
-  const bothResponded = responses.length === 2;
-  const iSubmitted = myResponse !== null;
 
+  // Only consider responses for the current question (stale rows from previous
+  // rounds may still exist if cleanup raced with a refetch).
+  const currentQId = f.current_question_id;
+  const responses = (f.question_responses ?? []).filter(
+    (r) => r.question_id === currentQId,
+  );
+
+  const myResponse = responses.find((r) => r.user_id === userId) ?? null;
+  const friendResponse = responses.find((r) => r.user_id !== userId) ?? null;
+
+  const iSubmitted = myResponse !== null;
+  const bothSubmitted = responses.length === 2;
+  const iWatched = myResponse !== null && myResponse.watched_at !== null;
+
+  // reveal_ready: friend has submitted AND I haven't watched their video yet
+  // waiting: I submitted but friend hasn't
+  // your_turn: I haven't submitted yet
   let state: FriendshipState;
-  if (bothResponded) {
+  if (bothSubmitted && !iWatched) {
     state = 'reveal_ready';
   } else if (!iSubmitted) {
     state = 'your_turn';
   } else {
+    // iSubmitted && (!bothSubmitted || iWatched)
     state = 'waiting';
   }
 
+  // Streak is incremented on send (handled in record.tsx), so we show it live.
   const fallbackProfile: FriendProfile = { username: friendId, display_name: null, avatar_url: null };
 
   return {
@@ -121,6 +138,7 @@ function buildFriendshipWithState(
     state,
     expiresAt: myResponse?.expires_at ?? null,
     myResponseId: myResponse?.id ?? null,
+    currentQuestionId: currentQId,
   };
 }
 
