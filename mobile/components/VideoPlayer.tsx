@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Text, Platform } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Platform } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { Audio } from 'expo-av';
 import { supabase } from '../lib/supabase';
 import { colors, typography, spacing } from '../theme/tokens';
 
@@ -35,7 +36,6 @@ async function completeReveal(
   const bothWatched = responses?.length === 2 && responses.every((r) => r.watched_at !== null);
   if (!bothWatched) return;
 
-  // Both watched — delete both storage files, all responses, and clear the question slot
   const paths = responses!.map((r) => r.video_url);
   await supabase.storage.from('videos').remove(paths);
 
@@ -50,7 +50,6 @@ async function completeReveal(
     .update({ current_question_id: null })
     .eq('id', friendshipId);
 
-  // Immediately assign next question so testing doesn't wait for midnight cron
   await supabase.rpc('rotate_daily_questions');
 }
 
@@ -62,9 +61,13 @@ function WatchedOverlay() {
   );
 }
 
+// ── Web player ─────────────────────────────────────────────────────────────
+
 function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const hasWatchedRef = useRef(false);
   const [done, setDone] = useState(false);
+  const [started, setStarted] = useState(false);
 
   function handleEnded() {
     if (hasWatchedRef.current) return;
@@ -75,36 +78,56 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
       .finally(() => onWatched());
   }
 
+  function handleTapToPlay() {
+    setStarted(true);
+    videoRef.current?.play();
+  }
+
   if (done) return <WatchedOverlay />;
 
   return (
     <View style={styles.container}>
       {/* @ts-ignore — <video> is valid JSX on web */}
       <video
+        ref={videoRef}
         src={signedUrl}
-        autoPlay
-        controls
         playsInline
         onEnded={handleEnded}
         style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000' }}
       />
+      {!started && (
+        <TouchableOpacity style={styles.tapOverlay} onPress={handleTapToPlay} activeOpacity={0.85}>
+          <View style={styles.playButton}>
+            <Text style={styles.playIcon}>▶</Text>
+          </View>
+          <Text style={styles.tapHint}>Tap to watch</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
+// ── Native player ──────────────────────────────────────────────────────────
+
 function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
   const [done, setDone] = useState(false);
+  const [started, setStarted] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
 
   const player = useVideoPlayer(signedUrl, (p) => {
-    p.play();
+    // Do not autoplay — wait for user tap
+    p.muted = false;
   });
+
+  // Enable sound through speaker even when phone is on silent
+  useEffect(() => {
+    Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
+  }, []);
 
   useEffect(() => {
     const endSub = player.addListener('playToEnd', () => {
       if (hasWatchedRef.current) return;
-      if (player.currentTime < 1) return;
       hasWatchedRef.current = true;
       setDone(true);
       completeReveal(storagePath, friendshipId, questionId)
@@ -114,7 +137,7 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
 
     const statusSub = player.addListener('statusChange', ({ status, error }) => {
       if (status === 'error') {
-        setPlayError(error?.message ?? 'Could not play video — format may not be supported on this device.');
+        setPlayError(error?.message ?? 'Could not play video.');
       }
     });
 
@@ -123,6 +146,11 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
       statusSub.remove();
     };
   }, [player, storagePath, friendshipId, questionId, onWatched]);
+
+  function handleTapToPlay() {
+    setStarted(true);
+    player.play();
+  }
 
   if (done) return <WatchedOverlay />;
 
@@ -139,12 +167,22 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
       <VideoView
         player={player}
         style={styles.video}
-        nativeControls
+        nativeControls={false}
         contentFit="contain"
       />
+      {!started && (
+        <TouchableOpacity style={styles.tapOverlay} onPress={handleTapToPlay} activeOpacity={0.85}>
+          <View style={styles.playButton}>
+            <Text style={styles.playIcon}>▶</Text>
+          </View>
+          <Text style={styles.tapHint}>Tap to watch</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
+
+// ── Export ─────────────────────────────────────────────────────────────────
 
 export function VideoPlayer(props: VideoPlayerProps) {
   if (Platform.OS === 'web') {
@@ -162,6 +200,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing[6],
+  },
+  tapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  playButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.ember,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing[4],
+  },
+  playIcon: {
+    color: '#fff',
+    fontSize: 32,
+    marginLeft: 6,
+  },
+  tapHint: {
+    color: '#fff',
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodyMedium,
   },
   errorText: {
     color: colors.flame,
