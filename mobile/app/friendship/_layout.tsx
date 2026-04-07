@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 
 export default function FriendshipLayout() {
-  return <Stack />;
+  return <Slot />;
 }

@@ -156,5 +156,28 @@ export function useFriendships(userId: string | null): UseFriendshipsResult {
     load();
   }, [userId]);
 
+  // Realtime: refetch when any question_response or friendship changes
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`friendships_realtime_${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'question_responses' }, () => {
+        fetchFriendshipsWithState(userId)
+          .then(setFriendships)
+          .catch(() => {});
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'friendships' }, () => {
+        fetchFriendshipsWithState(userId)
+          .then(setFriendships)
+          .catch(() => {});
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
   return { friendships, loading, error, refetch: load };
 }

@@ -6,23 +6,44 @@ import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [usePassword, setUsePassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const router = useRouter();
 
   const sendOtp = async () => {
     if (!email.trim()) return;
     setLoading(true);
+    setErrorMsg('');
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
       options: { shouldCreateUser: true },
     });
     setLoading(false);
     if (error) {
-      Alert.alert('Error', error.message);
+      console.error('[login] signInWithOtp error:', error.message);
+      setErrorMsg(error.message);
       return;
     }
     router.push({ pathname: '/(auth)/verify', params: { email: email.trim().toLowerCase() } });
+  };
+
+  const signInWithPassword = async () => {
+    if (!email.trim() || !password.trim()) return;
+    setLoading(true);
+    setErrorMsg('');
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    setLoading(false);
+    if (error) {
+      console.error('[login] signInWithPassword error:', error.message);
+      setErrorMsg(error.message);
+    }
+    // auth guard handles redirect on success
   };
 
   return (
@@ -43,10 +64,31 @@ export default function LoginScreen() {
         autoCapitalize="none"
         autoComplete="email"
       />
-      <TouchableOpacity style={styles.button} onPress={sendOtp} disabled={loading}>
+      {usePassword && (
+        <TextInput
+          style={[styles.input, focused && styles.inputFocused]}
+          placeholder="Password"
+          placeholderTextColor={colors.textMuted}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+        />
+      )}
+      {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={usePassword ? signInWithPassword : sendOtp}
+        disabled={loading}
+      >
         {loading
           ? <ActivityIndicator color={colors.bg} />
-          : <Text style={styles.buttonText}>Send Code</Text>}
+          : <Text style={styles.buttonText}>{usePassword ? 'Sign in' : 'Send Code'}</Text>}
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.toggleButton} onPress={() => { setUsePassword(v => !v); setErrorMsg(''); }}>
+        <Text style={styles.toggleText}>
+          {usePassword ? 'Use email code instead' : 'Sign in with password'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -101,5 +143,21 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base,
     fontFamily: typography.families.bodySemiBold,
     fontWeight: '600',
+  },
+  errorText: {
+    color: colors.destructive,
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.body,
+    marginBottom: spacing[3],
+    textAlign: 'center',
+  },
+  toggleButton: {
+    marginTop: spacing[4],
+    alignItems: 'center',
+  },
+  toggleText: {
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodyMedium,
+    color: colors.textSecondary,
   },
 });

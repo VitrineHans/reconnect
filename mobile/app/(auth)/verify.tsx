@@ -20,13 +20,12 @@ export default function VerifyScreen() {
     });
     setLoading(false);
     if (error) Alert.alert('Error', 'Invalid or expired code. Please try again.');
-    // On success: onAuthStateChange fires → auth guard in _layout.tsx handles redirect
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.title}>Check your email</Text>
+        <Text style={styles.title}>Check your email 📬</Text>
         <Text style={styles.subtitle}>We sent a 6-digit code to{'\n'}{email}</Text>
       </View>
       <TextInput
@@ -68,7 +67,6 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes['2xl'],
     fontFamily: typography.families.display,
     color: colors.text,
-    letterSpacing: typography.letterSpacing.tight,
     marginBottom: spacing[2],
   },
   subtitle: {
@@ -92,10 +90,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing[4],
   },
   inputFocused: {
-    borderColor: colors.ember,
+    borderColor: colors.primary,
   },
   button: {
-    backgroundColor: colors.ember,
+    backgroundColor: colors.primary,
     borderRadius: radius.md,
     paddingVertical: spacing[4],
     alignItems: 'center',
@@ -104,9 +102,9 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   buttonText: {
-    color: colors.bg,
+    color: '#fff',
     fontSize: typography.sizes.base,
     fontFamily: typography.families.bodySemiBold,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Slot, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { Fraunces_700Bold, Fraunces_700Bold_Italic } from '@expo-google-fonts/fraunces';
 import {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-} from '@expo-google-fonts/plus-jakarta-sans';
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_800ExtraBold_Italic,
+} from '@expo-google-fonts/nunito';
 import { useSession } from '../hooks/useSession';
 import { useProfile } from '../hooks/useProfile';
 import { usePushToken } from '../hooks/usePushToken';
@@ -19,15 +19,14 @@ export default function RootLayout() {
   const { profile, profileLoading } = useProfile(session);
   const segments = useSegments();
   const router = useRouter();
-  usePushToken(session); // PUSH-01, PUSH-02: silent background registration
+  usePushToken(session);
 
   const [fontsLoaded] = useFonts({
-    Fraunces_700Bold,
-    Fraunces_700Bold_Italic,
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_800ExtraBold_Italic,
   });
 
   useEffect(() => {
@@ -42,7 +41,14 @@ export default function RootLayout() {
       router.replace('/(onboarding)/username');
     } else if (session && profile?.username && profile.username !== '' && !profile?.onboarding_answers && !inOnboarding) {
       router.replace('/(onboarding)/questionnaire');
-    } else if (session && profile?.username && profile.username !== '' && profile?.onboarding_answers && (inAuth || inOnboarding)) {
+    } else if (
+      session &&
+      profile?.username &&
+      profile.username !== '' &&
+      profile?.onboarding_answers &&
+      segments[0] !== '(tabs)' &&
+      !(segments[0] === '(onboarding)' && segments[1] === 'questionnaire')
+    ) {
       router.replace('/(tabs)/home');
     }
   }, [session, loading, profile, profileLoading, fontsLoaded]);
@@ -50,16 +56,10 @@ export default function RootLayout() {
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator color={colors.ember} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(onboarding)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
-  );
+  return <Slot />;
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
-import { Video as VideoCompressor } from 'react-native-compressor';
 import { supabase } from '../lib/supabase';
 
 export type UploadState = {
@@ -10,29 +10,33 @@ export type UploadState = {
   error: string | null;
 };
 
-async function compressVideo(uri: string): Promise<string> {
-  return VideoCompressor.compress(uri, {
-    compressionMethod: 'auto',
-    maxSize: 1280,
-  });
-}
-
-async function readAsBase64(uri: string): Promise<string> {
-  return FileSystem.readAsStringAsync(uri, {
+async function getArrayBuffer(uri: string): Promise<{ buffer: ArrayBuffer; contentType: string }> {
+  if (Platform.OS === 'web') {
+    // On web, uri is a blob: URL — fetch it directly.
+    // Content-Type reflects the mimeType set when the Blob was created.
+    const response = await fetch(uri);
+    const contentType = response.headers.get('content-type') ?? 'video/webm';
+    const buffer = await response.arrayBuffer();
+    return { buffer, contentType };
+  }
+  // Native: read as base64 then decode
+  const base64 = await FileSystem.readAsStringAsync(uri, {
     encoding: 'base64' as FileSystem.EncodingType,
   });
+  return { buffer: decode(base64), contentType: 'video/mp4' };
 }
 
 function uploadWithProgress(
   signedUrl: string,
   arrayBuffer: ArrayBuffer,
+  contentType: string,
   onProgress: (pct: number) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', signedUrl);
-    xhr.setRequestHeader('Content-Type', 'video/mp4');
-    xhr.setRequestHeader('x-upsert', 'false');
+    xhr.setRequestHeader('Content-Type', contentType);
+    xhr.setRequestHeader('x-upsert', 'true');
     xhr.upload.onprogress = (e: ProgressEvent) => {
       if (e.lengthComputable) {
         onProgress(Math.round((e.loaded / e.total) * 100));
@@ -73,20 +77,19 @@ export function useVideoUpload(): UploadState & {
     setProgress(0);
 
     try {
-      const storagePath = `videos/${friendshipId}/${userId}/${questionId}.mp4`;
-      const compressedUri = await compressVideo(localUri);
-      const base64 = await readAsBase64(compressedUri);
-      const arrayBuffer = decode(base64);
+      const { buffer, contentType } = await getArrayBuffer(localUri);
+      const ext = contentType.includes('mp4') ? 'mp4' : 'webm';
+      const storagePath = `videos/${friendshipId}/${userId}/${questionId}.${ext}`;
 
       const { data, error: urlError } = await supabase.storage
         .from('videos')
-        .createSignedUploadUrl(storagePath);
+        .createSignedUploadUrl(storagePath, { upsert: true });
 
       if (urlError || !data) {
         throw new Error(urlError?.message ?? 'Failed to get signed URL');
       }
 
-      await uploadWithProgress(data.signedUrl, arrayBuffer, setProgress);
+      await uploadWithProgress(data.signedUrl, buffer, contentType, setProgress);
       setProgress(100);
       return storagePath;
     } catch (e) {

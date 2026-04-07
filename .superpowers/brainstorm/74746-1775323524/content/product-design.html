@@ -1,0 +1,146 @@
+<h2>Reconnect — Full Product Design</h2>
+<p class="subtitle">The daily loop, home screen concept, and how monetization weaves in naturally</p>
+
+<!-- SECTION 1: THE DAILY LOOP -->
+<div class="section">
+  <div class="label">The 24-Hour Loop</div>
+  <div style="display:flex; gap:8px; align-items:stretch; flex-wrap:wrap; margin-top:12px;">
+
+    <div style="flex:1; min-width:120px; background:rgba(255,255,255,0.04); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.08); text-align:center;">
+      <div style="font-size:28px">❓</div>
+      <div style="font-size:12px; font-weight:700; color:#a78bfa; margin:6px 0 4px">QUESTION DROPS</div>
+      <div style="font-size:12px; color:#999">New question surfaced to both friends. Category chosen by algorithm.</div>
+    </div>
+
+    <div style="display:flex; align-items:center; color:#555; font-size:18px">→</div>
+
+    <div style="flex:1; min-width:120px; background:rgba(255,255,255,0.04); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.08); text-align:center;">
+      <div style="font-size:28px">🎥</div>
+      <div style="font-size:12px; font-weight:700; color:#f59e0b; margin:6px 0 4px">YOU ANSWER</div>
+      <div style="font-size:12px; color:#999">Record a short video. Can't see friend's answer yet. Clock is ticking.</div>
+    </div>
+
+    <div style="display:flex; align-items:center; color:#555; font-size:18px">→</div>
+
+    <div style="flex:1; min-width:120px; background:rgba(255,255,255,0.04); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.08); text-align:center;">
+      <div style="font-size:28px">👀</div>
+      <div style="font-size:12px; font-weight:700; color:#34d399; margin:6px 0 4px">BOTH ANSWERED</div>
+      <div style="font-size:12px; color:#999">"Alex answered 👀" — push fires. Reveal unlocks. Watch together (or async).</div>
+    </div>
+
+    <div style="display:flex; align-items:center; color:#555; font-size:18px">→</div>
+
+    <div style="flex:1; min-width:120px; background:rgba(255,255,255,0.04); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.08); text-align:center;">
+      <div style="font-size:28px">🔥</div>
+      <div style="font-size:12px; font-weight:700; color:#ef4444; margin:6px 0 4px">STREAK +1</div>
+      <div style="font-size:12px; color:#999">Streak grows. Video deleted after watch. New question in 24h.</div>
+    </div>
+
+  </div>
+  <div style="margin-top:8px; padding:10px 14px; background:rgba(239,68,68,0.08); border-radius:8px; border-left:3px solid #ef4444;">
+    <span style="font-size:12px; color:#fca5a5">⏰ If either person misses the 24h window — streak resets to 0. No exceptions. That's the stakes.</span>
+  </div>
+</div>
+
+<!-- SECTION 2: HOME SCREEN MOCKUP -->
+<div class="section">
+  <div class="label">Home Screen — Three Friendship States</div>
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; justify-content:center;">
+
+    <!-- Phone mockup -->
+    <div style="width:200px; background:#0a0a0a; border-radius:28px; border:2px solid #333; padding:16px 12px; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+      <div style="text-align:center; font-size:11px; color:#555; margin-bottom:12px; letter-spacing:1px">RECONNECT</div>
+
+      <!-- Friend 1: Reveal ready -->
+      <div style="background:linear-gradient(135deg, rgba(167,139,250,0.2), rgba(167,139,250,0.05)); border:1px solid rgba(167,139,250,0.4); border-radius:14px; padding:10px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div style="width:28px; height:28px; background:#6d28d9; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">A</div>
+            <span style="font-size:13px; font-weight:600; color:#fff">Alex</span>
+          </div>
+          <span style="font-size:11px; color:#f59e0b">🔥 47</span>
+        </div>
+        <div style="background:rgba(167,139,250,0.15); border-radius:8px; padding:6px 8px; text-align:center;">
+          <div style="font-size:10px; color:#a78bfa; font-weight:700; letter-spacing:1px">✨ REVEAL READY</div>
+          <div style="font-size:11px; color:#ddd; margin-top:2px">Tap to watch both answers</div>
+        </div>
+      </div>
+
+      <!-- Friend 2: Waiting for you -->
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:10px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div style="width:28px; height:28px; background:#1d4ed8; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">M</div>
+            <span style="font-size:13px; font-weight:600; color:#fff">Maya</span>
+          </div>
+          <span style="font-size:11px; color:#f59e0b">🔥 12</span>
+        </div>
+        <div style="font-size:11px; color:#9ca3af; margin-bottom:6px; font-style:italic">"What's a skill you wish you had?"</div>
+        <div style="background:#ef4444; border-radius:8px; padding:5px 8px; text-align:center;">
+          <div style="font-size:11px; color:#fff; font-weight:700">▶ Answer now · 9h left</div>
+        </div>
+      </div>
+
+      <!-- Friend 3: Waiting for them -->
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div style="width:28px; height:28px; background:#065f46; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">J</div>
+            <span style="font-size:13px; font-weight:600; color:#fff">Jamie</span>
+          </div>
+          <span style="font-size:11px; color:#f59e0b">🔥 83</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:5px 8px; text-align:center;">
+          <div style="font-size:11px; color:#6b7280">⏳ Waiting for Jamie...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- State explanations -->
+    <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:10px; justify-content:center;">
+      <div style="padding:12px; background:rgba(167,139,250,0.08); border-radius:10px; border-left:3px solid #a78bfa;">
+        <div style="font-size:12px; font-weight:700; color:#a78bfa; margin-bottom:4px">✨ REVEAL READY</div>
+        <div style="font-size:12px; color:#ccc">Both answered. This is the dopamine moment — tap to watch. Highest-priority state, always shown first.</div>
+      </div>
+      <div style="padding:12px; background:rgba(239,68,68,0.08); border-radius:10px; border-left:3px solid #ef4444;">
+        <div style="font-size:12px; font-weight:700; color:#ef4444; margin-bottom:4px">⏰ YOUR TURN</div>
+        <div style="font-size:12px; color:#ccc">Friend answered. Clock is visible. This is the FOMO + streak-loss pressure combined.</div>
+      </div>
+      <div style="padding:12px; background:rgba(255,255,255,0.04); border-radius:10px; border-left:3px solid #374151;">
+        <div style="font-size:12px; font-weight:700; color:#9ca3af; margin-bottom:4px">⏳ WAITING</div>
+        <div style="font-size:12px; color:#ccc">You answered. Now waiting on them. Gentle nudge goes out after 12h.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: MONETIZATION IN CONTEXT -->
+<div class="section">
+  <div class="label">Where Monetization Lives</div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+
+    <div style="flex:1; min-width:160px; padding:12px; background:rgba(167,139,250,0.08); border-radius:10px; border:1px solid rgba(167,139,250,0.2);">
+      <div style="font-size:18px; margin-bottom:6px">🎵</div>
+      <div style="font-size:12px; font-weight:700; color:#a78bfa; margin-bottom:4px">Sponsored Packs</div>
+      <div style="font-size:11px; color:#999">Appear as a themed question category. "Spotify Wrapped: Your Friendship Edition." Users opt-in. Feels like a gift from the brand, not an ad.</div>
+    </div>
+
+    <div style="flex:1; min-width:160px; padding:12px; background:rgba(252,165,165,0.08); border-radius:10px; border:1px solid rgba(252,165,165,0.2);">
+      <div style="font-size:18px; margin-bottom:6px">🎁</div>
+      <div style="font-size:12px; font-weight:700; color:#fca5a5; margin-bottom:4px">Friendship Gifts</div>
+      <div style="font-size:11px; color:#999">Surfaces at streak milestones (30, 60, 100 days) and after a particularly funny or emotional reveal. "Celebrate your 100-day streak — send Alex a coffee ☕"</div>
+    </div>
+
+    <div style="flex:1; min-width:160px; padding:12px; background:rgba(134,239,172,0.08); border-radius:10px; border:1px solid rgba(134,239,172,0.2);">
+      <div style="font-size:18px; margin-bottom:6px">🔬</div>
+      <div style="font-size:12px; font-weight:700; color:#86efac; margin-bottom:4px">Data Layer</div>
+      <div style="font-size:11px; color:#999">Every question engagement, like/dislike, category preference, and completion rate builds the dataset. Anonymized trend reports: "What do Gen Z friendships talk about in 2026?"</div>
+    </div>
+
+  </div>
+</div>
+
+<div style="text-align:center; margin-top:20px; padding:14px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+  <p style="color:#888; font-size:13px; margin:0">Does this feel like the right product? Any section to revisit before we write the spec?</p>
+</div>

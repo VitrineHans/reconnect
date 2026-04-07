@@ -154,6 +154,8 @@ Run /simplify before presenting code to the user.
 
 Installed skills: `frontend-design`, `browser-use` (in `.claude/skills/`)
 
+**Research rule:** Always use Context7 (`mcp__context7__resolve-library-id` + `mcp__context7__query-docs`) when researching any library, framework, or API used in this project — React Native, Expo, Supabase, Expo Router, expo-notifications, expo-camera, etc. Never rely on training data alone for library-specific details.
+
 ---
 
 ## Key Decisions

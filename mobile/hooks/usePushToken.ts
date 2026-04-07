@@ -20,7 +20,9 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
     Constants?.expoConfig?.extra?.eas?.projectId ??
     Constants?.easConfig?.projectId;
 
-  const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
+  const { data } = await Notifications.getExpoPushTokenAsync(
+    projectId ? { projectId } : undefined,
+  );
   return data;
 }
 
@@ -31,12 +33,17 @@ export function usePushToken(session: Session | null): void {
     if (!session?.user?.id || registered.current) return;
     registered.current = true;
 
-    registerForPushNotificationsAsync().then(async (token) => {
-      if (!token) return;
-      await supabase
-        .from('profiles')
-        .update({ push_token: token })
-        .eq('id', session.user.id);
-    });
+    registerForPushNotificationsAsync()
+      .then(async (token) => {
+        if (!token) return;
+        await supabase
+          .from('profiles')
+          .update({ push_token: token })
+          .eq('id', session.user.id);
+      })
+      .catch(() => {
+        // Push token registration is non-critical in development.
+        // Requires EAS projectId — will work in production builds.
+      });
   }, [session?.user?.id]);
 }

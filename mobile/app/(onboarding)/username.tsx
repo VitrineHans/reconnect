@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
@@ -12,28 +13,27 @@ export default function UsernameScreen() {
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<'username' | 'displayName' | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
+  const router = useRouter();
 
   const submit = async () => {
+    setErrorMsg('');
     if (!USERNAME_REGEX.test(username)) {
-      Alert.alert('Invalid username', 'Use 3–20 characters: letters, numbers, underscores only.');
+      setErrorMsg('Use 3–20 characters: letters, numbers, underscores only.');
       return;
     }
     if (!displayName.trim() || displayName.length > 50) {
-      Alert.alert('Invalid name', 'Display name must be 1–50 characters.');
+      setErrorMsg('Display name must be 1–50 characters.');
       return;
     }
     setLoading(true);
     const { error } = await supabase
       .from('profiles')
-      .update({ username: username.trim(), display_name: displayName.trim() })
-      .eq('id', session!.user.id);
+      .upsert({ id: session!.user.id, username: username.trim(), display_name: displayName.trim() });
     setLoading(false);
-    if (error?.code === '23505') {
-      Alert.alert('Username taken', 'That username is already in use. Try another.');
-      return;
-    }
-    if (error) Alert.alert('Error', error.message);
-    // Auth guard detects username is now set → redirects to questionnaire automatically
+    if (error?.code === '23505') { setErrorMsg('That username is already taken. Try another.'); return; }
+    if (error) { console.error('[username] upsert error:', error.message); setErrorMsg(error.message); return; }
+    router.replace('/(onboarding)/questionnaire');
   };
 
   return (
@@ -64,6 +64,7 @@ export default function UsernameScreen() {
         onFocus={() => setFocusedField('displayName')}
         onBlur={() => setFocusedField(null)}
       />
+      {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
       <TouchableOpacity style={styles.button} onPress={submit} disabled={loading}>
         {loading
           ? <ActivityIndicator color={colors.bg} />
@@ -131,5 +132,12 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base,
     fontFamily: typography.families.bodySemiBold,
     fontWeight: '600',
+  },
+  errorText: {
+    color: colors.destructive,
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.body,
+    marginBottom: spacing[3],
+    textAlign: 'center',
   },
 });

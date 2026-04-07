@@ -1,5 +1,7 @@
 import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { useFriendships } from '../../hooks/useFriendships';
 import type { FriendshipWithState } from '../../hooks/useFriendships';
@@ -10,7 +12,9 @@ export default function HomeScreen() {
   const { session } = useSession();
   const router = useRouter();
   const userId = session?.user?.id ?? null;
-  const { friendships, loading, error } = useFriendships(userId);
+  const { friendships, loading, error, refetch } = useFriendships(userId);
+
+  useFocusEffect(useCallback(() => { refetch(); }, [userId]));
 
   function handleCardPress(friendship: FriendshipWithState) {
     if (friendship.state === 'reveal_ready') {

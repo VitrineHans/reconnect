@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import {
   CameraView,
   useCameraPermissions,
@@ -14,21 +14,31 @@ type Props = {
   onCancel: () => void;
 };
 
+const MAX_DURATION = 30;
+
 export function VideoRecorder({ onVideoReady, onCancel }: Props) {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(MAX_DURATION);
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
 
+  // Web-only refs
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const webStreamRef = useRef<MediaStream | null>(null);
+  const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Countdown timer — auto-stops when it hits 0
   useEffect(() => {
     if (recordingState !== 'recording') return;
-    setTimeLeft(30);
+    setTimeLeft(MAX_DURATION);
     const interval = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
           clearInterval(interval);
+          handleStop();
           return 0;
         }
         return t - 1;
@@ -36,6 +46,14 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
     }, 1000);
     return () => clearInterval(interval);
   }, [recordingState]);
+
+  // Cleanup web stream on unmount
+  useEffect(() => {
+    return () => {
+      webStreamRef.current?.getTracks().forEach((t) => t.stop());
+      if (autoStopTimerRef.current) clearTimeout(autoStopTimerRef.current);
+    };
+  }, []);
 
   if (!cameraPermission?.granted || !micPermission?.granted) {
     return (
@@ -59,10 +77,18 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
   }
 
   async function handleRecord() {
+    if (Platform.OS === 'web') {
+      await handleRecordWeb();
+    } else {
+      await handleRecordNative();
+    }
+  }
+
+  async function handleRecordNative() {
     if (!cameraRef.current) return;
     setRecordingState('recording');
     try {
-      const result = await cameraRef.current.recordAsync({ maxDuration: 30 });
+      const result = await cameraRef.current.recordAsync({ maxDuration: MAX_DURATION });
       if (result?.uri) {
         setVideoUri(result.uri);
         setRecordingState('preview');
@@ -72,8 +98,58 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
     }
   }
 
+  async function handleRecordWeb() {
+    setRecordingState('recording');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      webStreamRef.current = stream;
+      chunksRef.current = [];
+
+      // Prefer mp4 so native (iOS) can play it; fall back to webm
+      const mimeType =
+        ['video/mp4', 'video/webm;codecs=h264,aac', 'video/webm'].find((t) =>
+          MediaRecorder.isTypeSupported(t),
+        ) ?? 'video/webm';
+
+      const recorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const uri = URL.createObjectURL(blob);
+        setVideoUri(uri);
+        setRecordingState('preview');
+        stream.getTracks().forEach((t) => t.stop());
+        webStreamRef.current = null;
+      };
+
+      recorder.start();
+
+      // Fallback auto-stop in case timer useEffect fires stop after unmount
+      autoStopTimerRef.current = setTimeout(() => {
+        if (recorder.state === 'recording') recorder.stop();
+      }, MAX_DURATION * 1000 + 500);
+    } catch {
+      setRecordingState('idle');
+    }
+  }
+
   function handleStop() {
-    cameraRef.current?.stopRecording();
+    if (Platform.OS === 'web') {
+      if (mediaRecorderRef.current?.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
+      }
+    } else {
+      cameraRef.current?.stopRecording();
+    }
   }
 
   function handleReRecord() {

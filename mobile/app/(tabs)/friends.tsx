@@ -1,48 +1,47 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface ProfileSummary { id: string; username: string; display_name: string | null; avatar_url: string | null; }
+interface ProfileSummary { id: string; username: string; display_name: string | null; }
 interface FriendInvite { id: string; from_user: string; status: string; profile: ProfileSummary; }
 interface Friendship { id: string; other_user: ProfileSummary; streak_count: number; }
 
-// ── Supabase query helpers (each ≤15 lines) ────────────────────────────────
+// ── Supabase helpers ───────────────────────────────────────────────────────
 
-async function runSearch(query: string, currentUserId: string, setResults: (r: ProfileSummary[]) => void) {
+async function runSearch(query: string, currentUserId: string): Promise<ProfileSummary[]> {
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url')
+    .select('id, username, display_name')
     .ilike('username', `%${query}%`)
     .neq('id', currentUserId)
     .limit(10);
-  setResults(data ?? []);
+  return data ?? [];
 }
 
-async function fetchPendingInvites(userId: string, setInvites: (i: FriendInvite[]) => void) {
+async function fetchPendingInvites(userId: string): Promise<FriendInvite[]> {
   const { data } = await supabase
     .from('friend_invites')
-    .select('id, from_user, status, profile:profiles!from_user(id, username, display_name, avatar_url)')
+    .select('id, from_user, status, profile:profiles!from_user(id, username, display_name)')
     .eq('to_user', userId)
     .eq('status', 'pending');
-  setInvites((data as FriendInvite[] | null) ?? []);
+  return (data as FriendInvite[] | null) ?? [];
 }
 
-async function fetchFriendships(userId: string, setList: (f: Friendship[]) => void) {
+async function fetchFriendships(userId: string): Promise<Friendship[]> {
   const { data } = await supabase
     .from('friendships')
-    .select('id, streak_count, user_a, user_b, profile_a:profiles!user_a(id, username, display_name, avatar_url), profile_b:profiles!user_b(id, username, display_name, avatar_url)')
+    .select('id, streak_count, user_a, user_b, profile_a:profiles!user_a(id, username, display_name), profile_b:profiles!user_b(id, username, display_name)')
     .or(`user_a.eq.${userId},user_b.eq.${userId}`);
 
-  const mapped: Friendship[] = (data ?? []).map((row: Record<string, unknown>) => {
+  return (data ?? []).map((row: Record<string, unknown>) => {
     const isA = row.user_a === userId;
     const other = (isA ? row.profile_b : row.profile_a) as ProfileSummary;
     return { id: row.id as string, other_user: other, streak_count: row.streak_count as number };
   });
-  setList(mapped);
 }
 
 // ── Data hook ──────────────────────────────────────────────────────────────
@@ -57,7 +56,9 @@ function useFriendsData(userId: string | undefined) {
   const fetchAll = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    await Promise.all([fetchPendingInvites(userId, setPendingInvites), fetchFriendships(userId, setFriendships)]);
+    const [invites, friends] = await Promise.all([fetchPendingInvites(userId), fetchFriendships(userId)]);
+    setPendingInvites(invites);
+    setFriendships(friends);
     setLoading(false);
   }, [userId]);
 
@@ -65,7 +66,10 @@ function useFriendsData(userId: string | undefined) {
 
   useEffect(() => {
     if (!search.trim() || !userId) { setSearchResults([]); return; }
-    const timer = setTimeout(() => runSearch(search, userId, setSearchResults), 300);
+    const timer = setTimeout(async () => {
+      const results = await runSearch(search, userId);
+      setSearchResults(results);
+    }, 300);
     return () => clearTimeout(timer);
   }, [search, userId]);
 
@@ -82,7 +86,7 @@ function useFriendsData(userId: string | undefined) {
     await fetchAll();
   };
 
-  return { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite, refresh: fetchAll };
+  return { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite };
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
@@ -92,7 +96,7 @@ function SearchResultCard({ profile, onAdd }: { profile: ProfileSummary; onAdd: 
     <View style={styles.card}>
       <View style={styles.cardInfo}>
         <Text style={styles.cardName}>{profile.display_name ?? profile.username}</Text>
-        <Text style={styles.cardUsername}>@{profile.username}</Text>
+        <Text style={styles.cardSub}>@{profile.username}</Text>
       </View>
       <TouchableOpacity style={styles.addButton} onPress={onAdd}>
         <Text style={styles.addButtonText}>Add</Text>
@@ -104,14 +108,16 @@ function SearchResultCard({ profile, onAdd }: { profile: ProfileSummary; onAdd: 
 function InviteCard({ invite, onAccept, onDecline }: { invite: FriendInvite; onAccept: () => void; onDecline: () => void }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.cardName}>{invite.profile.display_name ?? invite.profile.username}</Text>
-      <Text style={styles.cardUsername}>@{invite.profile.username} wants to connect</Text>
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardName}>{invite.profile.display_name ?? invite.profile.username}</Text>
+        <Text style={styles.cardSub}>@{invite.profile.username} wants to connect 👋</Text>
+      </View>
       <View style={styles.inviteActions}>
         <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
-          <Text style={styles.acceptText}>Accept</Text>
+          <Text style={styles.acceptText}>✓</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.declineButton} onPress={onDecline}>
-          <Text style={styles.declineText}>Decline</Text>
+          <Text style={styles.declineText}>✕</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -123,7 +129,7 @@ function FriendCard({ friendship }: { friendship: Friendship }) {
     <View style={styles.card}>
       <View style={styles.cardInfo}>
         <Text style={styles.cardName}>{friendship.other_user.display_name ?? friendship.other_user.username}</Text>
-        <Text style={styles.cardUsername}>@{friendship.other_user.username}</Text>
+        <Text style={styles.cardSub}>@{friendship.other_user.username}</Text>
       </View>
       {friendship.streak_count > 0 && (
         <View style={styles.streakBadge}>
@@ -141,40 +147,33 @@ export default function FriendsScreen() {
   const userId = session?.user?.id;
   const { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite } = useFriendsData(userId);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator color={colors.ember} />
-      </View>
-    );
-  }
-
   return (
-    <FlatList
-      style={styles.list}
-      ListHeaderComponent={() => (
-        <View style={styles.container}>
-          <Text style={styles.title}>Friends</Text>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <Text style={styles.title}>Friends 👯</Text>
 
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by username..."
-            placeholderTextColor={colors.textMuted}
-            value={search}
-            onChangeText={setSearch}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchResults.length === 0 && search.length === 0 && (
-            <Text style={styles.emptyHint}>Search for friends by username</Text>
-          )}
-          {searchResults.map(p => (
-            <SearchResultCard key={p.id} profile={p} onAdd={() => sendInvite(p.id)} />
-          ))}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search by username..."
+        placeholderTextColor={colors.textMuted}
+        value={search}
+        onChangeText={setSearch}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
 
-          {pendingInvites.length > 0 && (
-            <Text style={styles.sectionTitle}>Pending invites</Text>
-          )}
+      {search.length > 0 && searchResults.length === 0 && (
+        <Text style={styles.emptyHint}>No users found</Text>
+      )}
+      {search.length === 0 && (
+        <Text style={styles.emptyHint}>Search for friends by username</Text>
+      )}
+      {searchResults.map(p => (
+        <SearchResultCard key={p.id} profile={p} onAdd={() => sendInvite(p.id)} />
+      ))}
+
+      {pendingInvites.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Pending invites</Text>
           {pendingInvites.map(inv => (
             <InviteCard
               key={inv.id}
@@ -183,50 +182,38 @@ export default function FriendsScreen() {
               onDecline={() => respondToInvite(inv.id, 'declined')}
             />
           ))}
+        </>
+      )}
 
-          <Text style={styles.sectionTitle}>My Friends</Text>
-          {friendships.length === 0 && (
-            <Text style={styles.emptyHint}>No friends yet — search above to add someone</Text>
-          )}
-        </View>
+      <Text style={styles.sectionTitle}>My Friends</Text>
+      {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: spacing[4] }} />}
+      {!loading && friendships.length === 0 && (
+        <Text style={styles.emptyHint}>No friends yet — search above to add someone 🙌</Text>
       )}
-      data={friendships}
-      keyExtractor={f => f.id}
-      renderItem={({ item }) => (
-        <View style={styles.friendItemWrapper}>
-          <FriendCard friendship={item} />
-        </View>
-      )}
-    />
+      {friendships.map(f => (
+        <FriendCard key={f.id} friendship={f} />
+      ))}
+    </ScrollView>
   );
 }
 
 // ── Styles ─────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.bg,
-  },
-  list: {
-    backgroundColor: colors.bg,
-  },
+  scroll: { backgroundColor: colors.bg },
   container: {
     paddingHorizontal: spacing[6],
-    paddingBottom: spacing[4],
+    paddingTop: spacing[12],
+    paddingBottom: spacing[10],
   },
   title: {
     fontSize: typography.sizes['2xl'],
     fontFamily: typography.families.display,
     color: colors.text,
-    letterSpacing: typography.letterSpacing.tight,
     marginBottom: spacing[5],
-    marginTop: spacing[12],
   },
   searchInput: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.stroke,
     borderRadius: radius.md,
     paddingHorizontal: spacing[4],
@@ -240,7 +227,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.sizes.sm,
     fontFamily: typography.families.bodySemiBold,
-    fontWeight: '700',
     color: colors.textSecondary,
     marginTop: spacing[6],
     marginBottom: spacing[3],
@@ -256,7 +242,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.stroke,
     borderRadius: radius.md,
     paddingHorizontal: spacing[4],
@@ -264,78 +250,54 @@ const styles = StyleSheet.create({
     marginBottom: spacing[2],
     backgroundColor: colors.surface,
   },
-  cardInfo: {
-    flex: 1,
-  },
+  cardInfo: { flex: 1 },
   cardName: {
     fontSize: typography.sizes.base,
     fontFamily: typography.families.bodySemiBold,
-    fontWeight: '600',
     color: colors.text,
   },
-  cardUsername: {
+  cardSub: {
     fontSize: typography.sizes.sm,
     fontFamily: typography.families.body,
     color: colors.textSecondary,
     marginTop: 2,
   },
   streakBadge: {
-    backgroundColor: colors.surface3,
+    backgroundColor: colors.surface2,
     borderRadius: radius.full,
     paddingHorizontal: spacing[2],
     paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: colors.strokeStrong,
   },
   streakText: {
     fontSize: typography.sizes.sm,
     fontFamily: typography.families.bodyBold,
-    fontWeight: '700',
     color: colors.gold,
   },
   addButton: {
-    backgroundColor: colors.ember,
+    backgroundColor: colors.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
   },
   addButtonText: {
-    color: colors.bg,
+    color: '#fff',
     fontSize: typography.sizes.sm,
     fontFamily: typography.families.bodySemiBold,
-    fontWeight: '600',
   },
-  inviteActions: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    marginTop: spacing[2],
-    width: '100%',
-  },
+  inviteActions: { flexDirection: 'row', gap: spacing[2] },
   acceptButton: {
-    flex: 1,
-    backgroundColor: colors.ember,
+    backgroundColor: colors.mint,
     borderRadius: radius.sm,
-    padding: spacing[2],
-    alignItems: 'center',
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
-  acceptText: {
-    color: colors.bg,
-    fontFamily: typography.families.bodySemiBold,
-    fontWeight: '600',
-  },
+  acceptText: { color: '#fff', fontFamily: typography.families.bodySemiBold, fontSize: typography.sizes.base },
   declineButton: {
-    flex: 1,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.stroke,
     borderRadius: radius.sm,
-    padding: spacing[2],
-    alignItems: 'center',
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
-  declineText: {
-    color: colors.textSecondary,
-    fontFamily: typography.families.body,
-  },
-  friendItemWrapper: {
-    paddingHorizontal: spacing[6],
-  },
+  declineText: { color: colors.textSecondary, fontFamily: typography.families.body, fontSize: typography.sizes.base },
 });

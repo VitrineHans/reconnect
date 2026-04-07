@@ -9,6 +9,7 @@ import { colors, typography, spacing } from '../../../theme/tokens';
 interface RevealResponse {
   id: string;
   video_url: string;
+  question_id: string;
 }
 
 interface RevealState {
@@ -34,7 +35,7 @@ async function fetchRevealData(
 
   const { data: response, error: rErr } = await supabase
     .from('question_responses')
-    .select('id, video_url')
+    .select('id, video_url, question_id')
     .eq('friendship_id', friendshipId)
     .neq('user_id', userId)
     .eq('question_id', friendship.current_question_id)
@@ -52,7 +53,10 @@ async function fetchRevealData(
     throw new Error('Could not generate video URL');
   }
 
-  return { response: { id: response.id, video_url: response.video_url }, signedUrl: urlData.signedUrl };
+  return {
+    response: { id: response.id, video_url: response.video_url, question_id: response.question_id },
+    signedUrl: urlData.signedUrl,
+  };
 }
 
 export default function RevealScreen() {
@@ -101,7 +105,8 @@ export default function RevealScreen() {
     <VideoPlayer
       signedUrl={state.signedUrl}
       storagePath={state.response.video_url}
-      responseId={state.response.id}
+      friendshipId={id}
+      questionId={state.response.question_id}
       onWatched={() => router.replace('/(tabs)/home')}
     />
   );

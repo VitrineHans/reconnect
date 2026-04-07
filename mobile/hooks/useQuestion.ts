@@ -15,22 +15,30 @@ export interface UseQuestionResult {
 }
 
 async function fetchCurrentQuestion(friendshipId: string): Promise<Question | null> {
-  const { data, error } = await supabase
+  // Step 1: get the current_question_id from the friendship
+  const { data: friendship, error: fError } = await supabase
     .from('friendships')
-    .select('current_question_id, questions!current_question_id(id, text, category)')
+    .select('current_question_id')
     .eq('id', friendshipId)
     .single();
 
-  if (error) throw new Error(error.message);
-  if (!data?.current_question_id) return null;
+  if (fError) throw new Error(fError.message);
+  if (!friendship?.current_question_id) return null;
 
-  const q = (data.questions as unknown) as { id: string; text: string; category: string } | null;
-  if (!q) return null;
+  // Step 2: fetch the question directly by ID
+  const { data: question, error: qError } = await supabase
+    .from('questions')
+    .select('id, text, category')
+    .eq('id', friendship.current_question_id)
+    .single();
+
+  if (qError) throw new Error(qError.message);
+  if (!question) return null;
 
   return {
-    id: q.id,
-    text: q.text,
-    category: q.category as Question['category'],
+    id: question.id,
+    text: question.text,
+    category: question.category as Question['category'],
   };
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, StyleSheet, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useSession } from '../../hooks/useSession';
 import { useProfile } from '../../hooks/useProfile';
 import { supabase } from '../../lib/supabase';
@@ -9,6 +10,7 @@ import { colors, typography, spacing, radius } from '../../theme/tokens';
 export default function ProfileScreen() {
   const { session } = useSession();
   const { profile, profileLoading, refetch } = useProfile(session);
+  const router = useRouter();
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -97,6 +99,10 @@ export default function ProfileScreen() {
         {saving
           ? <ActivityIndicator color={colors.bg} />
           : <Text style={styles.buttonText}>Save</Text>}
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.prefsButton} onPress={() => router.push('/(onboarding)/questionnaire')}>
+        <Text style={styles.prefsButtonText}>✏️ Edit preferences</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
@@ -195,6 +201,20 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base,
     fontFamily: typography.families.bodySemiBold,
     fontWeight: '600',
+  },
+  prefsButton: {
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: colors.stroke,
+    borderRadius: radius.md,
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+    marginBottom: spacing[3],
+  },
+  prefsButtonText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodyMedium,
   },
   signOutButton: {
     marginTop: 'auto',

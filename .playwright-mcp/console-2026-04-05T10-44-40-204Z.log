@@ -1,0 +1,17 @@
+[    3029ms] [LOG] Supabase Studio is running commit b9e83b25e1ba5d7135a4a608ad4cad926d6bd62a deployed at 2026-04-03 20:51:54 +02:00. @ https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/b90722010ae1fae2.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:12
+[  843120ms] [ERROR] ConfigCat - ERROR - [1103] Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP.
+Error: Request failed due to a network or protocol error.
+    at new t (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/9da48c34aeec93fe.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:5:41758)
+    at s.onerror (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/9da48c34aeec93fe.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:5:101076)
+    at XMLHttpRequest.r (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/b90722010ae1fae2.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:10:5015) @ https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/b90722010ae1fae2.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:12
+[  843121ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://configcat.supabase.com/configuration-files/configcat-proxy/frontend-v2/config_v6.json?sdk=ConfigCat-JS/a-9.5.1&ccetag=W%2F%227d068d2be0ed4d3e287d0aeb088a978b%22:0
+[ 1293111ms] [ERROR] ConfigCat - ERROR - [1102] Request timed out while trying to fetch config JSON. Timeout value: 30000ms
+Error: Request timed out. Timeout value: 30000ms
+    at new t (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/9da48c34aeec93fe.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:5:41758)
+    at s.ontimeout (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/9da48c34aeec93fe.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:5:100959) @ https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/b90722010ae1fae2.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:12
+[ 1705738ms] [ERROR] ConfigCat - ERROR - [1103] Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP.
+Error: Request failed due to a network or protocol error.
+    at new t (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/9da48c34aeec93fe.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:5:41758)
+    at s.onerror (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/9da48c34aeec93fe.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:5:101076)
+    at XMLHttpRequest.r (https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/b90722010ae1fae2.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:10:5015) @ https://frontend-assets.supabase.com/studio/b9e83b25e1ba/_next/static/chunks/b90722010ae1fae2.js?dpl=dpl_Gm6W8TQVETHWv7avCPjdeugRfZzv:12
+[ 1705738ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://configcat.supabase.com/configuration-files/configcat-proxy/frontend-v2/config_v6.json?sdk=ConfigCat-JS/a-9.5.1&ccetag=W%2F%227d068d2be0ed4d3e287d0aeb088a978b%22:0
