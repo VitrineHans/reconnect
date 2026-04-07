@@ -111,18 +111,21 @@ function buildFriendshipWithState(
 
   const iSubmitted = myResponse !== null;
   const bothSubmitted = responses.length === 2;
-  const iWatched = myResponse !== null && myResponse.watched_at !== null;
 
-  // reveal_ready: friend has submitted AND I haven't watched their video yet
-  // waiting: I submitted but friend hasn't
-  // your_turn: I haven't submitted yet
+  // completeReveal sets watched_at on the video that was watched, which is
+  // the FRIEND's response row (storagePath = friend's video_url). So to know
+  // whether I have already watched, check the friend's watched_at, not mine.
+  const iWatched = friendResponse !== null && friendResponse.watched_at !== null;
+
+  // reveal_ready: both submitted AND I haven't watched friend's video yet
+  // your_turn:    I haven't submitted yet
+  // waiting:      I submitted but friend hasn't, OR I've already watched
   let state: FriendshipState;
   if (bothSubmitted && !iWatched) {
     state = 'reveal_ready';
   } else if (!iSubmitted) {
     state = 'your_turn';
   } else {
-    // iSubmitted && (!bothSubmitted || iWatched)
     state = 'waiting';
   }
 

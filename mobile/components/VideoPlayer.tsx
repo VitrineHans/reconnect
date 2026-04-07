@@ -57,7 +57,7 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
   const hasWatchedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [done, setDone] = useState(false);
-  const [unmuted, setUnmuted] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   function handleEnded() {
     if (hasWatchedRef.current) return;
@@ -66,13 +66,13 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
     completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
   }
 
-  function handleUnmute() {
+  // Called from a real browser click — browsers allow unmuted play from user gestures.
+  function handleTapToPlay() {
     const v = videoRef.current;
     if (!v) return;
     v.muted = false;
-    v.currentTime = 0;
     v.play().catch(() => {});
-    setUnmuted(true);
+    setPlaying(true);
   }
 
   if (done) return <WatchedOverlay />;
@@ -83,18 +83,16 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
       <video
         ref={(el: HTMLVideoElement | null) => { videoRef.current = el; }}
         src={signedUrl}
-        autoPlay
-        muted
         playsInline
         onEnded={handleEnded}
         style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000', display: 'block' }}
       />
-      {!unmuted && (
-        <TouchableOpacity style={styles.tapOverlay} onPress={handleUnmute} activeOpacity={0.85}>
+      {!playing && (
+        <TouchableOpacity style={styles.tapOverlay} onPress={handleTapToPlay} activeOpacity={0.85}>
           <View style={styles.muteBtn}>
-            <Text style={styles.muteIcon}>🔇</Text>
+            <Text style={styles.muteIcon}>▶</Text>
           </View>
-          <Text style={styles.tapHint}>Tap to unmute</Text>
+          <Text style={styles.tapHint}>Tap to watch</Text>
         </TouchableOpacity>
       )}
     </View>
