@@ -115,15 +115,19 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
   const [started, setStarted] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
 
+  // Reset audio session from camera's playAndRecord mode → playback mode.
+  // Must run before the player is used so AVPlayer picks up the right session.
+  useEffect(() => {
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+    });
+  }, []);
+
   const player = useVideoPlayer(signedUrl, (p) => {
-    // Do not autoplay — wait for user tap
     p.muted = false;
   });
-
-  // Enable sound through speaker even when phone is on silent
-  useEffect(() => {
-    Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
-  }, []);
 
   useEffect(() => {
     const endSub = player.addListener('playToEnd', () => {

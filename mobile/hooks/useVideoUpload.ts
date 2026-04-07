@@ -13,15 +13,16 @@ async function getArrayBuffer(uri: string): Promise<{ buffer: ArrayBuffer; conte
   const response = await fetch(uri);
   const buffer = await response.arrayBuffer();
 
-  // On web the blob carries the real MIME type; on native infer from extension.
+  // Web blob URLs carry the real MIME type from the MediaRecorder.
+  // Native file:// URIs report application/octet-stream — always upload as
+  // video/mp4 so browsers can play back iOS .mov recordings (H.264 codec is
+  // compatible; only the container name differs).
   const headerType = response.headers.get('content-type') ?? '';
-  if (headerType && !headerType.includes('application/octet-stream') && !headerType.includes('text/plain')) {
+  const isWebBlob = uri.startsWith('blob:');
+  if (isWebBlob && headerType && !headerType.includes('octet-stream')) {
     return { buffer, contentType: headerType };
   }
-
-  const ext = uri.split('?')[0].split('.').pop()?.toLowerCase() ?? 'mp4';
-  const contentType = ext === 'mov' ? 'video/quicktime' : ext === 'webm' ? 'video/webm' : 'video/mp4';
-  return { buffer, contentType };
+  return { buffer, contentType: 'video/mp4' };
 }
 
 function uploadWithProgress(
@@ -76,7 +77,7 @@ export function useVideoUpload(): UploadState & {
 
     try {
       const { buffer, contentType } = await getArrayBuffer(localUri);
-      const ext = contentType === 'video/quicktime' ? 'mov' : contentType.includes('mp4') ? 'mp4' : 'webm';
+      const ext = contentType.includes('webm') ? 'webm' : 'mp4';
       const storagePath = `videos/${friendshipId}/${userId}/${questionId}.${ext}`;
 
       const { data, error: urlError } = await supabase.storage
