@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Platform } from 'react-native';
-import { useVideoPlayer, VideoView } from 'expo-video';
+import { StyleSheet, View, ActivityIndicator, Text, Platform } from 'react-native';
+import { Audio, Video, ResizeMode } from 'expo-av';
 import { supabase } from '../lib/supabase';
 import { colors, typography, spacing } from '../theme/tokens';
 
@@ -50,25 +50,48 @@ function WatchedOverlay() {
 }
 
 // ── Web player ──────────────────────────────────────────────────────────────
-// autoPlay+muted always works (no gesture needed). We show a "tap to unmute"
-// overlay. On tap we unmute and restart from the beginning — this is a direct
-// DOM call inside a real click event so browsers allow audio.
+// Uses a raw <div> + <video> via dangerouslySetInnerHTML workaround to bypass
+// React Native Web's event abstraction layer. We inject the HTML directly so
+// the browser treats the click as a real user gesture enabling unmuted play.
 
 function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
-  const videoElRef = useRef<HTMLVideoElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [done, setDone] = useState(false);
   const [unmuted, setUnmuted] = useState(false);
 
-  function handleEnded() {
-    if (hasWatchedRef.current) return;
-    hasWatchedRef.current = true;
-    setDone(true);
-    completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
-  }
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Create video element manually so we get a real DOM reference
+    const video = document.createElement('video');
+    video.src = signedUrl;
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#000;display:block;';
+    container.appendChild(video);
+    videoRef.current = video;
+
+    video.addEventListener('ended', () => {
+      if (hasWatchedRef.current) return;
+      hasWatchedRef.current = true;
+      setDone(true);
+      completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
+    });
+
+    return () => {
+      video.pause();
+      video.remove();
+      videoRef.current = null;
+    };
+  }, [signedUrl]);
 
   function handleUnmute() {
-    const v = videoElRef.current;
+    const v = videoRef.current;
     if (!v) return;
     v.muted = false;
     v.currentTime = 0;
@@ -79,62 +102,84 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
   if (done) return <WatchedOverlay />;
 
   return (
-    <View style={styles.container}>
+    // @ts-ignore — div is valid on web
+    <div style={{ flex: 1, position: 'relative', backgroundColor: '#000', width: '100%', height: '100%' }}>
       {/* @ts-ignore */}
-      <video
-        ref={(el: HTMLVideoElement | null) => { videoElRef.current = el; }}
-        src={signedUrl}
-        autoPlay
-        muted
-        playsInline
-        onEnded={handleEnded}
-        style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000', display: 'block' }}
-      />
+      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
       {!unmuted && (
-        <TouchableOpacity style={styles.tapOverlay} onPress={handleUnmute} activeOpacity={0.85}>
-          <View style={styles.playButton}>
-            <Text style={styles.playIcon}>🔇</Text>
-          </View>
-          <Text style={styles.tapHint}>Tap to unmute</Text>
-        </TouchableOpacity>
+        // @ts-ignore
+        <div
+          onClick={handleUnmute}
+          style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            cursor: 'pointer',
+          }}
+        >
+          {/* @ts-ignore */}
+          <div style={{
+            width: 72, height: 72, borderRadius: 36,
+            backgroundColor: colors.ember,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 12,
+          }}>
+            {/* @ts-ignore */}
+            <span style={{ fontSize: 28 }}>🔇</span>
+          </div>
+          {/* @ts-ignore */}
+          <span style={{ color: '#fff', fontSize: 16 }}>Tap to unmute</span>
+        </div>
       )}
-    </View>
+    </div>
   );
 }
 
 // ── Native player ───────────────────────────────────────────────────────────
-// Auto-play immediately — same as the original working version. The user's
-// tap on the friendship card (navigation to this screen) is the gesture.
-// No Audio API calls — expo-video owns its AVAudioSession.
+// Uses expo-av's Video component + Audio.setAudioModeAsync so that
+// playsInSilentModeIOS works. expo-video's useVideoPlayer has its own
+// AVAudioSession management that conflicts with the Audio API.
 
 function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
   const [done, setDone] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
 
-  const player = useVideoPlayer(signedUrl, (p) => {
-    p.play(); // auto-play exactly like the original working version
-  });
-
   useEffect(() => {
-    const endSub = player.addListener('playToEnd', () => {
-      if (hasWatchedRef.current) return;
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+      shouldDuckAndroid: false,
+    }).catch(() => {});
+  }, []);
+
+  function handlePlaybackStatusUpdate(status: any) {
+    if (status.isLoaded && status.didJustFinish && !hasWatchedRef.current) {
       hasWatchedRef.current = true;
       setDone(true);
       completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
-    });
-    const statusSub = player.addListener('statusChange', ({ status, error }) => {
-      if (status === 'error') setPlayError(error?.message ?? 'Could not play video.');
-    });
-    return () => { endSub.remove(); statusSub.remove(); };
-  }, [player, storagePath, friendshipId, questionId, onWatched]);
+    }
+    if (status.error) {
+      setPlayError(status.error ?? 'Could not play video.');
+    }
+  }
 
   if (done) return <WatchedOverlay />;
   if (playError) return <View style={styles.overlay}><Text style={styles.errorText}>{playError}</Text></View>;
 
   return (
     <View style={styles.container}>
-      <VideoView player={player} style={styles.video} nativeControls={false} contentFit="contain" />
+      <Video
+        source={{ uri: signedUrl }}
+        style={styles.video}
+        resizeMode={ResizeMode.CONTAIN}
+        shouldPlay
+        isLooping={false}
+        useNativeControls={false}
+        onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+      />
     </View>
   );
 }
@@ -148,14 +193,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   video: { flex: 1 },
   overlay: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', padding: spacing[6] },
-  tapOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  playButton: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.ember, justifyContent: 'center', alignItems: 'center', marginBottom: spacing[3] },
-  playIcon: { fontSize: 28 },
-  tapHint: { color: '#fff', fontSize: typography.sizes.base, fontFamily: typography.families.bodyMedium },
   errorText: { color: colors.flame, fontSize: typography.sizes.base, fontFamily: typography.families.body, textAlign: 'center' },
 });
