@@ -50,17 +50,15 @@ function WatchedOverlay() {
 }
 
 // ── Web player ──────────────────────────────────────────────────────────────
-// The <video> element is always in the DOM (so it can load the source).
-// We overlay a tap button on top. On tap we call play() directly on the
-// element via a callback ref — this counts as a direct user gesture so
-// browsers allow unmuted autoplay.
+// autoPlay+muted always works (no gesture needed). We show a "tap to unmute"
+// overlay. On tap we unmute and restart from the beginning — this is a direct
+// DOM call inside a real click event so browsers allow audio.
 
 function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
-  const [done, setDone] = useState(false);
-  const [started, setStarted] = useState(false);
-  // Callback ref: always has the current DOM element, no stale-ref issues.
   const videoElRef = useRef<HTMLVideoElement | null>(null);
+  const [done, setDone] = useState(false);
+  const [unmuted, setUnmuted] = useState(false);
 
   function handleEnded() {
     if (hasWatchedRef.current) return;
@@ -69,9 +67,13 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
     completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
   }
 
-  function handleTap() {
-    setStarted(true);
-    videoElRef.current?.play();
+  function handleUnmute() {
+    const v = videoElRef.current;
+    if (!v) return;
+    v.muted = false;
+    v.currentTime = 0;
+    v.play();
+    setUnmuted(true);
   }
 
   if (done) return <WatchedOverlay />;
@@ -82,16 +84,18 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
       <video
         ref={(el: HTMLVideoElement | null) => { videoElRef.current = el; }}
         src={signedUrl}
+        autoPlay
+        muted
         playsInline
         onEnded={handleEnded}
         style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000', display: 'block' }}
       />
-      {!started && (
-        <TouchableOpacity style={styles.tapOverlay} onPress={handleTap} activeOpacity={0.85}>
+      {!unmuted && (
+        <TouchableOpacity style={styles.tapOverlay} onPress={handleUnmute} activeOpacity={0.85}>
           <View style={styles.playButton}>
-            <Text style={styles.playIcon}>▶</Text>
+            <Text style={styles.playIcon}>🔇</Text>
           </View>
-          <Text style={styles.tapHint}>Tap to watch</Text>
+          <Text style={styles.tapHint}>Tap to unmute</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -99,18 +103,18 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
 }
 
 // ── Native player ───────────────────────────────────────────────────────────
-// expo-video manages its own AVAudioSession — do NOT call Audio.setAudioModeAsync,
-// it interferes. The original working version just called p.play() in the
-// useVideoPlayer callback and sound worked out of the box.
+// Auto-play immediately — same as the original working version. The user's
+// tap on the friendship card (navigation to this screen) is the gesture.
+// No Audio API calls — expo-video owns its AVAudioSession.
 
 function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
   const hasWatchedRef = useRef(false);
   const [done, setDone] = useState(false);
-  const [started, setStarted] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
 
-  // Load but don't auto-play — wait for tap.
-  const player = useVideoPlayer(signedUrl, (_p) => {});
+  const player = useVideoPlayer(signedUrl, (p) => {
+    p.play(); // auto-play exactly like the original working version
+  });
 
   useEffect(() => {
     const endSub = player.addListener('playToEnd', () => {
@@ -125,25 +129,12 @@ function NativeVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, o
     return () => { endSub.remove(); statusSub.remove(); };
   }, [player, storagePath, friendshipId, questionId, onWatched]);
 
-  function handleTap() {
-    setStarted(true);
-    player.play();
-  }
-
   if (done) return <WatchedOverlay />;
   if (playError) return <View style={styles.overlay}><Text style={styles.errorText}>{playError}</Text></View>;
 
   return (
     <View style={styles.container}>
       <VideoView player={player} style={styles.video} nativeControls={false} contentFit="contain" />
-      {!started && (
-        <TouchableOpacity style={styles.tapOverlay} onPress={handleTap} activeOpacity={0.85}>
-          <View style={styles.playButton}>
-            <Text style={styles.playIcon}>▶</Text>
-          </View>
-          <Text style={styles.tapHint}>Tap to watch</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 }
@@ -161,10 +152,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  playButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.ember, justifyContent: 'center', alignItems: 'center', marginBottom: spacing[4] },
-  playIcon: { color: '#fff', fontSize: 32, marginLeft: 6 },
+  playButton: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.ember, justifyContent: 'center', alignItems: 'center', marginBottom: spacing[3] },
+  playIcon: { fontSize: 28 },
   tapHint: { color: '#fff', fontSize: typography.sizes.base, fontFamily: typography.families.bodyMedium },
   errorText: { color: colors.flame, fontSize: typography.sizes.base, fontFamily: typography.families.body, textAlign: 'center' },
 });
