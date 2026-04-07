@@ -49,6 +49,9 @@ async function completeReveal(
     .from('friendships')
     .update({ current_question_id: null })
     .eq('id', friendshipId);
+
+  // Immediately assign next question so testing doesn't wait for midnight cron
+  await supabase.rpc('rotate_daily_questions');
 }
 
 function WatchedOverlay() {
