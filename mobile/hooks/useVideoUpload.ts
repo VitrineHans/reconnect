@@ -19,11 +19,13 @@ async function getArrayBuffer(uri: string): Promise<{ buffer: ArrayBuffer; conte
     const buffer = await response.arrayBuffer();
     return { buffer, contentType };
   }
-  // Native: read as base64 then decode
+  // Native: detect actual format from URI extension (.mov on iOS, .mp4 on Android)
+  const ext = uri.split('.').pop()?.toLowerCase() ?? 'mp4';
+  const contentType = ext === 'mov' ? 'video/quicktime' : 'video/mp4';
   const base64 = await FileSystem.readAsStringAsync(uri, {
     encoding: 'base64' as FileSystem.EncodingType,
   });
-  return { buffer: decode(base64), contentType: 'video/mp4' };
+  return { buffer: decode(base64), contentType };
 }
 
 function uploadWithProgress(
@@ -78,7 +80,7 @@ export function useVideoUpload(): UploadState & {
 
     try {
       const { buffer, contentType } = await getArrayBuffer(localUri);
-      const ext = contentType.includes('mp4') ? 'mp4' : 'webm';
+      const ext = contentType === 'video/quicktime' ? 'mov' : contentType.includes('mp4') ? 'mp4' : 'webm';
       const storagePath = `videos/${friendshipId}/${userId}/${questionId}.${ext}`;
 
       const { data, error: urlError } = await supabase.storage

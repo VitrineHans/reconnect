@@ -83,7 +83,7 @@ function WebVideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWa
       <video
         src={signedUrl}
         autoPlay
-        controls={false}
+        controls
         playsInline
         onEnded={handleEnded}
         style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000' }}
