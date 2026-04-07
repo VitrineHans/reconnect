@@ -46,6 +46,29 @@ export default function RecordScreen() {
       expires_at: expiresAt,
     });
     if (error) throw new Error(error.message);
+
+    // If the partner already submitted, both are in — increment streak now
+    const { data: responses } = await supabase
+      .from('question_responses')
+      .select('user_id')
+      .eq('friendship_id', friendshipId)
+      .eq('question_id', qId);
+
+    if ((responses?.length ?? 0) === 2) {
+      const { data: friendship } = await supabase
+        .from('friendships')
+        .select('streak_count')
+        .eq('id', friendshipId)
+        .single();
+
+      await supabase
+        .from('friendships')
+        .update({
+          streak_count: (friendship?.streak_count ?? 0) + 1,
+          last_answered_at: new Date().toISOString(),
+        })
+        .eq('id', friendshipId);
+    }
   }
 
   function handleRetry() {

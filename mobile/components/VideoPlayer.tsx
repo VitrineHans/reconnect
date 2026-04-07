@@ -17,7 +17,27 @@ async function completeReveal(
   friendshipId: string,
   questionId: string,
 ): Promise<void> {
-  await supabase.storage.from('videos').remove([storagePath]);
+  // Mark the friend's video as watched by this user
+  await supabase
+    .from('question_responses')
+    .update({ watched_at: new Date().toISOString() })
+    .eq('friendship_id', friendshipId)
+    .eq('question_id', questionId)
+    .eq('video_url', storagePath);
+
+  // Only clean up when BOTH friends have watched
+  const { data: responses } = await supabase
+    .from('question_responses')
+    .select('id, video_url, watched_at')
+    .eq('friendship_id', friendshipId)
+    .eq('question_id', questionId);
+
+  const bothWatched = responses?.length === 2 && responses.every((r) => r.watched_at !== null);
+  if (!bothWatched) return;
+
+  // Both watched — delete both storage files, all responses, and clear the question slot
+  const paths = responses!.map((r) => r.video_url);
+  await supabase.storage.from('videos').remove(paths);
 
   await supabase
     .from('question_responses')
@@ -25,18 +45,9 @@ async function completeReveal(
     .eq('friendship_id', friendshipId)
     .eq('question_id', questionId);
 
-  const { data: friendship } = await supabase
-    .from('friendships')
-    .select('streak_count')
-    .eq('id', friendshipId)
-    .single();
-
   await supabase
     .from('friendships')
-    .update({
-      streak_count: (friendship?.streak_count ?? 0) + 1,
-      current_question_id: null,
-    })
+    .update({ current_question_id: null })
     .eq('id', friendshipId);
 }
 
