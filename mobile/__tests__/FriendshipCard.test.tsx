@@ -15,6 +15,7 @@ function makeFriendship(overrides: Partial<FriendshipWithState> = {}): Friendshi
     state: 'your_turn',
     expiresAt: null,
     myResponseId: null,
+    currentQuestionId: null,
     ...overrides,
   };
 }

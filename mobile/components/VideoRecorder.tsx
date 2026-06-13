@@ -5,7 +5,11 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from 'expo-camera';
+import * as Device from 'expo-device';
 import { colors, typography, spacing, radius } from '../theme/tokens';
+
+// Simulator has no real camera — stub the video so the full flow is testable
+const IS_SIMULATOR = !Device.isDevice;
 
 type RecordingState = 'idle' | 'recording' | 'preview';
 
@@ -85,6 +89,11 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
   }
 
   async function handleRecordNative() {
+    if (IS_SIMULATOR) {
+      // Simulator camera can't actually record — countdown runs, Stop/auto-stop triggers handleStop
+      setRecordingState('recording');
+      return;
+    }
     if (!cameraRef.current) return;
     setRecordingState('recording');
     try {
@@ -147,6 +156,10 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
         clearTimeout(autoStopTimerRef.current);
         autoStopTimerRef.current = null;
       }
+    } else if (IS_SIMULATOR) {
+      // On simulator there's nothing to stop — jump straight to preview with a stub URI
+      setVideoUri('simulator://recording');
+      setRecordingState('preview');
     } else {
       cameraRef.current?.stopRecording();
     }
@@ -163,7 +176,18 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
 
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} mode="video" facing="front" />
+      <CameraView
+        ref={cameraRef}
+        style={styles.camera}
+        mode="video"
+        facing={IS_SIMULATOR ? 'back' : 'front'}
+      />
+
+      {IS_SIMULATOR && (
+        <View style={styles.simulatorBanner}>
+          <Text style={styles.simulatorText}>SIMULATOR — no real video captured</Text>
+        </View>
+      )}
 
       {recordingState === 'recording' && (
         <View style={styles.timerContainer}>
@@ -240,6 +264,20 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base,
     fontFamily: typography.families.bodySemiBold,
     fontWeight: '600',
+  },
+  simulatorBanner: {
+    position: 'absolute',
+    top: 16,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,165,0,0.85)',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  simulatorText: {
+    color: '#000',
+    fontSize: 11,
+    fontWeight: '700',
   },
   timerContainer: {
     position: 'absolute',

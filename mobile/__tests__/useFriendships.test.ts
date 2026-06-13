@@ -115,6 +115,7 @@ describe('useFriendships — sort order', () => {
         state: 'waiting',
         expiresAt: null,
         myResponseId: null,
+        currentQuestionId: null,
       },
       {
         id: 'f-reveal',
@@ -125,6 +126,7 @@ describe('useFriendships — sort order', () => {
         state: 'reveal_ready',
         expiresAt: null,
         myResponseId: 'r-1',
+        currentQuestionId: null,
       },
       {
         id: 'f-turn',
@@ -135,6 +137,7 @@ describe('useFriendships — sort order', () => {
         state: 'your_turn',
         expiresAt: null,
         myResponseId: null,
+        currentQuestionId: null,
       },
     ];
 

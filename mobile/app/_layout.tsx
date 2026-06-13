@@ -13,6 +13,7 @@ import { useSession } from '../hooks/useSession';
 import { useProfile } from '../hooks/useProfile';
 import { usePushToken } from '../hooks/usePushToken';
 import { colors } from '../theme/tokens';
+import * as Notifications from 'expo-notifications';
 
 export default function RootLayout() {
   const { session, loading } = useSession();
@@ -47,11 +48,27 @@ export default function RootLayout() {
       profile.username !== '' &&
       profile?.onboarding_answers &&
       segments[0] !== '(tabs)' &&
-      !(segments[0] === '(onboarding)' && segments[1] === 'questionnaire')
+      !(segments[0] === '(onboarding)' && (segments as string[])[1] === 'questionnaire')
     ) {
       router.replace('/(tabs)/home');
     }
   }, [session, loading, profile, profileLoading, fontsLoaded]);
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as Record<string, unknown>;
+      const friendshipId = data?.friendshipId as string | undefined;
+      const screen = data?.screen as string | undefined;
+      if (friendshipId && screen === 'reveal') {
+        router.push(`/friendship/${friendshipId}/reveal` as never);
+      } else if (friendshipId && screen === 'question') {
+        router.push(`/friendship/${friendshipId}/question` as never);
+      } else if (screen === 'friends') {
+        router.push('/(tabs)/friends' as never);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   if (!fontsLoaded) {
     return (

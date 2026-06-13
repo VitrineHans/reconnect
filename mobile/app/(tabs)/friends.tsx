@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
+import { sendExpoPushNotification } from '../../hooks/useNotifications';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -77,12 +78,33 @@ function useFriendsData(userId: string | undefined) {
     const { error } = await supabase.from('friend_invites').insert({ from_user: userId, to_user: toUserId });
     if (error?.code === '23505') { Alert.alert('Already sent', 'You already sent this person an invite.'); return; }
     if (error) { Alert.alert('Error', error.message); return; }
+    try {
+      const { data: recipientProfile } = await supabase
+        .from('profiles')
+        .select('push_token')
+        .eq('id', toUserId)
+        .single();
+      if (recipientProfile?.push_token) {
+        await sendExpoPushNotification(
+          recipientProfile.push_token,
+          'New friend request! 👋',
+          'Someone wants to connect with you on Reconnect',
+          { screen: 'friends' },
+        );
+      }
+    } catch {
+      // push failure must not block invite send
+    }
     await fetchAll();
   };
 
   const respondToInvite = async (inviteId: string, status: 'accepted' | 'declined') => {
     const { error } = await supabase.from('friend_invites').update({ status }).eq('id', inviteId);
     if (error) { Alert.alert('Error', error.message); return; }
+    if (status === 'accepted') {
+      // Assign a question to the new friendship immediately (cron only runs at midnight)
+      await supabase.rpc('rotate_daily_questions');
+    }
     await fetchAll();
   };
 

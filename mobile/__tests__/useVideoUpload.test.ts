@@ -70,6 +70,11 @@ const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve,
 describe('useVideoUpload', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Ensure fetch is properly mocked before each test so getArrayBuffer resolves
+    (global as unknown as Record<string, unknown>).fetch = jest.fn().mockResolvedValue({
+      arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
+      headers: { get: jest.fn().mockReturnValue(null) },
+    });
   });
 
   it('VIDEO-03: upload() resolves with correct storage path', async () => {

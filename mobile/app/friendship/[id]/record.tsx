@@ -7,6 +7,7 @@ import { useVideoUpload } from '../../../hooks/useVideoUpload';
 import { useSession } from '../../../hooks/useSession';
 import { supabase } from '../../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../../theme/tokens';
+import { sendExpoPushNotification } from '../../../hooks/useNotifications';
 
 export default function RecordScreen() {
   const { id, questionId } = useLocalSearchParams<{ id: string; questionId: string }>();
@@ -22,7 +23,11 @@ export default function RecordScreen() {
     setUploadError(null);
 
     try {
-      const storagePath = await upload(id, session.user.id, questionId, uri);
+      // Simulator bypass: no real file to upload
+      const storagePath =
+        uri === 'simulator://recording'
+          ? `simulator/${id}/${session.user.id}/${questionId}.mp4`
+          : await upload(id, session.user.id, questionId, uri);
       await insertResponseAndStreak(id, questionId, session.user.id, storagePath);
       router.replace('/(tabs)/home');
     } catch (e) {
@@ -47,21 +52,41 @@ export default function RecordScreen() {
     });
     if (error) throw new Error(error.message);
 
-    // Increment streak immediately when this user sends their answer.
-    // This gives instant feedback — streak goes up the moment you participate.
-    const { data: friendship } = await supabase
-      .from('friendships')
-      .select('streak_count')
-      .eq('id', friendshipId)
-      .single();
+    // Check if friend already answered (would make this the second response)
+    const { data: responses } = await supabase
+      .from('question_responses')
+      .select('user_id')
+      .eq('friendship_id', friendshipId)
+      .eq('question_id', qId);
 
-    await supabase
-      .from('friendships')
-      .update({
-        streak_count: (friendship?.streak_count ?? 0) + 1,
-        last_answered_at: new Date().toISOString(),
-      })
-      .eq('id', friendshipId);
+    const friendAlreadyAnswered = (responses ?? []).some((r: { user_id: string }) => r.user_id !== userId);
+
+    if (friendAlreadyAnswered) {
+      // Send reveal-ready push notification to the friend
+      const { data: friendship } = await supabase
+        .from('friendships')
+        .select('user_a, user_b')
+        .eq('id', friendshipId)
+        .single();
+
+      if (friendship) {
+        const friendId = friendship.user_a === userId ? friendship.user_b : friendship.user_a;
+        const { data: friendProfile } = await supabase
+          .from('profiles')
+          .select('push_token')
+          .eq('id', friendId)
+          .single();
+
+        if (friendProfile?.push_token) {
+          await sendExpoPushNotification(
+            friendProfile.push_token,
+            'Reveal ready! 👀',
+            'Both answers are in — watch your friend\'s video!',
+            { friendshipId, screen: 'reveal' },
+          );
+        }
+      }
+    }
   }
 
   function handleRetry() {
