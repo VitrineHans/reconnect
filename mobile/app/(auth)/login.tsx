@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [usePassword, setUsePassword] = useState(false);
@@ -50,11 +52,11 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <View style={styles.hero}>
         <Text style={styles.wordmark}>Reconnect</Text>
-        <Text style={styles.subtitle}>Daily video Q&A with your closest people</Text>
+        <Text style={styles.subtitle}>{t('auth.tagline')}</Text>
       </View>
       <TextInput
         style={[styles.input, focused && styles.inputFocused]}
-        placeholder="your@email.com"
+        placeholder={t('auth.emailPlaceholder')}
         placeholderTextColor={colors.textMuted}
         value={email}
         onChangeText={setEmail}
@@ -67,7 +69,7 @@ export default function LoginScreen() {
       {usePassword && (
         <TextInput
           style={[styles.input, focused && styles.inputFocused]}
-          placeholder="Password"
+          placeholder={t('auth.passwordPlaceholder')}
           placeholderTextColor={colors.textMuted}
           value={password}
           onChangeText={setPassword}
@@ -83,11 +85,11 @@ export default function LoginScreen() {
       >
         {loading
           ? <ActivityIndicator color={colors.bg} />
-          : <Text style={styles.buttonText}>{usePassword ? 'Sign in' : 'Send Code'}</Text>}
+          : <Text style={styles.buttonText}>{usePassword ? t('auth.signIn') : t('auth.sendCode')}</Text>}
       </TouchableOpacity>
       <TouchableOpacity style={styles.toggleButton} onPress={() => { setUsePassword(v => !v); setErrorMsg(''); }}>
         <Text style={styles.toggleText}>
-          {usePassword ? 'Use email code instead' : 'Sign in with password'}
+          {usePassword ? t('auth.useEmailCode') : t('auth.usePassword')}
         </Text>
       </TouchableOpacity>
     </View>

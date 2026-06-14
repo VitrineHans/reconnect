@@ -8,6 +8,31 @@
     "loading": "Laden…",
     "somethingWrong": "Er ging iets mis"
   },
+  "auth": {
+    "tagline": "Dagelijkse video-Q&A met je beste mensen",
+    "emailPlaceholder": "jouw@email.com",
+    "passwordPlaceholder": "Wachtwoord",
+    "signIn": "Inloggen",
+    "sendCode": "Code versturen",
+    "useEmailCode": "Gebruik e-mailcode",
+    "usePassword": "Inloggen met wachtwoord",
+    "verifyTitle": "Check je e-mail 📬",
+    "verifySubtitle": "We hebben een 6-cijferige code gestuurd naar\n{{email}}",
+    "codePlaceholder": "000000",
+    "verify": "Verifiëren",
+    "invalidCode": "Ongeldige of verlopen code. Probeer het opnieuw."
+  },
+  "onboarding": {
+    "createProfileTitle": "Maak je profiel aan",
+    "createProfileSubtitle": "Hoe moeten je vrienden je kennen?",
+    "username": "Gebruikersnaam",
+    "usernamePlaceholder": "bijv. alex_jones",
+    "displayName": "Weergavenaam",
+    "displayNamePlaceholder": "bijv. Alex",
+    "continue": "Doorgaan",
+    "usernameRules": "Gebruik 3–20 tekens: alleen letters, cijfers en underscores.",
+    "usernameTaken": "Die gebruikersnaam is al bezet. Probeer een andere."
+  },
   "home": {
     "title": "Jouw vragen",
     "empty": "Nog geen vriendschappen — nodig iemand uit!"

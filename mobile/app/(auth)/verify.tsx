@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 export default function VerifyScreen() {
+  const { t } = useTranslation();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,18 +21,18 @@ export default function VerifyScreen() {
       type: 'email',
     });
     setLoading(false);
-    if (error) Alert.alert('Error', 'Invalid or expired code. Please try again.');
+    if (error) Alert.alert(t('common.error'), t('auth.invalidCode'));
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.title}>Check your email 📬</Text>
-        <Text style={styles.subtitle}>We sent a 6-digit code to{'\n'}{email}</Text>
+        <Text style={styles.title}>{t('auth.verifyTitle')}</Text>
+        <Text style={styles.subtitle}>{t('auth.verifySubtitle', { email })}</Text>
       </View>
       <TextInput
         style={[styles.input, focused && styles.inputFocused]}
-        placeholder="000000"
+        placeholder={t('auth.codePlaceholder')}
         placeholderTextColor={colors.textMuted}
         value={code}
         onChangeText={setCode}
@@ -47,7 +49,7 @@ export default function VerifyScreen() {
       >
         {loading
           ? <ActivityIndicator color={colors.bg} />
-          : <Text style={styles.buttonText}>Verify</Text>}
+          : <Text style={styles.buttonText}>{t('auth.verify')}</Text>}
       </TouchableOpacity>
     </View>
   );

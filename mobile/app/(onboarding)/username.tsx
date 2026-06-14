@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
@@ -8,6 +9,7 @@ import { colors, typography, spacing, radius } from '../../theme/tokens';
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
 export default function UsernameScreen() {
+  const { t } = useTranslation();
   const { session } = useSession();
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -19,11 +21,11 @@ export default function UsernameScreen() {
   const submit = async () => {
     setErrorMsg('');
     if (!USERNAME_REGEX.test(username)) {
-      setErrorMsg('Use 3–20 characters: letters, numbers, underscores only.');
+      setErrorMsg(t('onboarding.usernameRules'));
       return;
     }
     if (!displayName.trim() || displayName.length > 50) {
-      setErrorMsg('Display name must be 1–50 characters.');
+      setErrorMsg(t('profile.invalidDisplayName'));
       return;
     }
     setLoading(true);
@@ -31,7 +33,7 @@ export default function UsernameScreen() {
       .from('profiles')
       .upsert({ id: session!.user.id, username: username.trim(), display_name: displayName.trim() });
     setLoading(false);
-    if (error?.code === '23505') { setErrorMsg('That username is already taken. Try another.'); return; }
+    if (error?.code === '23505') { setErrorMsg(t('onboarding.usernameTaken')); return; }
     if (error) { console.error('[username] upsert error:', error.message); setErrorMsg(error.message); return; }
     router.replace('/(onboarding)/questionnaire');
   };
@@ -39,13 +41,13 @@ export default function UsernameScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.title}>Create your profile</Text>
-        <Text style={styles.subtitle}>How should your friends know you?</Text>
+        <Text style={styles.title}>{t('onboarding.createProfileTitle')}</Text>
+        <Text style={styles.subtitle}>{t('onboarding.createProfileSubtitle')}</Text>
       </View>
-      <Text style={styles.label}>Username</Text>
+      <Text style={styles.label}>{t('onboarding.username')}</Text>
       <TextInput
         style={[styles.input, focusedField === 'username' && styles.inputFocused]}
-        placeholder="e.g. alex_jones"
+        placeholder={t('onboarding.usernamePlaceholder')}
         placeholderTextColor={colors.textMuted}
         value={username}
         onChangeText={setUsername}
@@ -54,10 +56,10 @@ export default function UsernameScreen() {
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <Text style={styles.label}>Display name</Text>
+      <Text style={styles.label}>{t('onboarding.displayName')}</Text>
       <TextInput
         style={[styles.input, focusedField === 'displayName' && styles.inputFocused]}
-        placeholder="e.g. Alex"
+        placeholder={t('onboarding.displayNamePlaceholder')}
         placeholderTextColor={colors.textMuted}
         value={displayName}
         onChangeText={setDisplayName}
@@ -68,7 +70,7 @@ export default function UsernameScreen() {
       <TouchableOpacity style={styles.button} onPress={submit} disabled={loading}>
         {loading
           ? <ActivityIndicator color={colors.bg} />
-          : <Text style={styles.buttonText}>Continue</Text>}
+          : <Text style={styles.buttonText}>{t('onboarding.continue')}</Text>}
       </TouchableOpacity>
     </View>
   );
