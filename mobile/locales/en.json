@@ -48,6 +48,23 @@
     "pushInviteTitle": "New friend request! 👋",
     "pushInviteBody": "Someone wants to connect with you on Reconnect"
   },
+  "flow": {
+    "noQuestionYet": "No question available yet. Check back soon!",
+    "uploadFailed": "Upload failed",
+    "tryAgain": "Try Again",
+    "uploading": "Uploading...",
+    "gettingAnswer": "Getting their answer...",
+    "revealLoadFailed": "Could not load friendship question",
+    "responseNotFound": "Friend's response not found",
+    "videoUrlFailed": "Could not generate video URL",
+    "pushRevealTitle": "Reveal ready! 👀",
+    "pushRevealBody": "Both answers are in — watch your friend's video!"
+  },
+  "notifications": {
+    "streakRiskTitle": "Streak at risk 🔥",
+    "streakRiskBody": "You have 4 hours left to answer for {{name}}!",
+    "friendFallback": "your friend"
+  },
   "home": {
     "title": "Your Questions",
     "empty": "No friendships yet — invite someone!"

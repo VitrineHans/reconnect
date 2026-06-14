@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import i18n from '../lib/i18n';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -13,7 +14,7 @@ Notifications.setNotificationHandler({
 
 export async function scheduleStreakRiskNotification(
   expiresAt: string,
-  friendName: string,
+  friendName?: string,
 ): Promise<string | null> {
   if (Platform.OS === 'web') return null;
   try {
@@ -23,8 +24,10 @@ export async function scheduleStreakRiskNotification(
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Streak at risk 🔥',
-        body: `You have 4 hours left to answer for ${friendName}!`,
+        title: i18n.t('notifications.streakRiskTitle'),
+        body: i18n.t('notifications.streakRiskBody', {
+          name: friendName ?? i18n.t('notifications.friendFallback'),
+        }),
         data: { type: 'streak_risk' },
       },
       trigger: {

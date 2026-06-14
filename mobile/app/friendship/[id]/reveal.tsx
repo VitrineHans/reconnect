@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../../lib/supabase';
 import { VideoPlayer } from '../../../components/VideoPlayer';
 import { useSession } from '../../../hooks/useSession';
 import { colors, typography, spacing } from '../../../theme/tokens';
+import i18n from '../../../lib/i18n';
 
 interface RevealResponse {
   id: string;
@@ -30,7 +32,7 @@ async function fetchRevealData(
     .single();
 
   if (fErr || !friendship?.current_question_id) {
-    throw new Error('Could not load friendship question');
+    throw new Error(i18n.t('flow.revealLoadFailed'));
   }
 
   const { data: response, error: rErr } = await supabase
@@ -42,7 +44,7 @@ async function fetchRevealData(
     .single();
 
   if (rErr || !response) {
-    throw new Error("Friend's response not found");
+    throw new Error(i18n.t('flow.responseNotFound'));
   }
 
   const { data: urlData, error: urlErr } = await supabase.storage
@@ -50,7 +52,7 @@ async function fetchRevealData(
     .createSignedUrl(response.video_url, 300);
 
   if (urlErr || !urlData?.signedUrl) {
-    throw new Error('Could not generate video URL');
+    throw new Error(i18n.t('flow.videoUrlFailed'));
   }
 
   return {
@@ -63,6 +65,7 @@ export default function RevealScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [state, setState] = useState<RevealState>({
     response: null,
@@ -88,7 +91,7 @@ export default function RevealScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.gold} />
-        <Text style={styles.loadingText}>Getting their answer...</Text>
+        <Text style={styles.loadingText}>{t('flow.gettingAnswer')}</Text>
       </View>
     );
   }
@@ -96,7 +99,7 @@ export default function RevealScreen() {
   if (state.error || !state.signedUrl || !state.response) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>{state.error ?? 'Something went wrong'}</Text>
+        <Text style={styles.errorText}>{state.error ?? t('common.somethingWrong')}</Text>
       </View>
     );
   }

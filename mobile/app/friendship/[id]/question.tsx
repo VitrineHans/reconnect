@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useQuestion } from '../../../hooks/useQuestion';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import { scheduleStreakRiskNotification, cancelStreakRiskNotification } from '../../../hooks/useNotifications';
@@ -9,6 +10,7 @@ import { supabase } from '../../../lib/supabase';
 export default function QuestionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useTranslation();
   const { question, loading, error } = useQuestion(id ?? null);
 
   const notifIdRef = useRef<string | null>(null);
@@ -40,7 +42,7 @@ export default function QuestionScreen() {
         .single();
 
       if (cancelled || !friendship) return;
-      const notifId = await scheduleStreakRiskNotification(expiresAt, 'your friend');
+      const notifId = await scheduleStreakRiskNotification(expiresAt);
       if (!cancelled) notifIdRef.current = notifId;
     }
 
@@ -83,7 +85,7 @@ export default function QuestionScreen() {
     console.log('[question] id:', id, 'error:', error, 'question:', question);
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>{error ?? 'No question available yet. Check back soon!'}</Text>
+        <Text style={styles.errorText}>{error ?? t('flow.noQuestionYet')}</Text>
       </View>
     );
   }

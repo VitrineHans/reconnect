@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { VideoRecorder } from '../../../components/VideoRecorder';
 import { UploadProgress } from '../../../components/UploadProgress';
 import { useVideoUpload } from '../../../hooks/useVideoUpload';
@@ -10,6 +11,7 @@ import { colors, typography, spacing, radius } from '../../../theme/tokens';
 import { sendExpoPushNotification } from '../../../hooks/useNotifications';
 
 export default function RecordScreen() {
+  const { t } = useTranslation();
   const { id, questionId } = useLocalSearchParams<{ id: string; questionId: string }>();
   const { session } = useSession();
   const router = useRouter();
@@ -31,7 +33,7 @@ export default function RecordScreen() {
       await insertResponseAndStreak(id, questionId, session.user.id, storagePath);
       router.replace('/(tabs)/home');
     } catch (e) {
-      setUploadError(e instanceof Error ? e.message : 'Upload failed');
+      setUploadError(e instanceof Error ? e.message : t('flow.uploadFailed'));
       setPendingUri(null);
     }
   }
@@ -78,10 +80,12 @@ export default function RecordScreen() {
           .single();
 
         if (friendProfile?.push_token) {
+          // NOTE: sent in the sender's language; localize to the recipient's
+          // stored locale once profiles persist a language preference.
           await sendExpoPushNotification(
             friendProfile.push_token,
-            'Reveal ready! 👀',
-            'Both answers are in — watch your friend\'s video!',
+            t('flow.pushRevealTitle'),
+            t('flow.pushRevealBody'),
             { friendshipId, screen: 'reveal' },
           );
         }
@@ -99,7 +103,7 @@ export default function RecordScreen() {
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{uploadError}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-          <Text style={styles.retryText}>Try Again</Text>
+          <Text style={styles.retryText}>{t('flow.tryAgain')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -115,7 +119,7 @@ export default function RecordScreen() {
       )}
       {uploading && (
         <View style={styles.progressOverlay}>
-          <Text style={styles.uploadingText}>Uploading...</Text>
+          <Text style={styles.uploadingText}>{t('flow.uploading')}</Text>
           <UploadProgress progress={progress} visible={uploading} />
         </View>
       )}

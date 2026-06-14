@@ -48,6 +48,23 @@
     "pushInviteTitle": "Nieuw vriendschapsverzoek! 👋",
     "pushInviteBody": "Iemand wil contact met je maken op Reconnect"
   },
+  "flow": {
+    "noQuestionYet": "Nog geen vraag beschikbaar. Kom snel terug!",
+    "uploadFailed": "Uploaden mislukt",
+    "tryAgain": "Opnieuw proberen",
+    "uploading": "Uploaden...",
+    "gettingAnswer": "Hun antwoord ophalen...",
+    "revealLoadFailed": "Kon de vraag van de vriendschap niet laden",
+    "responseNotFound": "Antwoord van vriend niet gevonden",
+    "videoUrlFailed": "Kon video-URL niet genereren",
+    "pushRevealTitle": "Klaar om te onthullen! 👀",
+    "pushRevealBody": "Beide antwoorden zijn binnen — bekijk de video van je vriend!"
+  },
+  "notifications": {
+    "streakRiskTitle": "Streak in gevaar 🔥",
+    "streakRiskBody": "Je hebt nog 4 uur om te antwoorden voor {{name}}!",
+    "friendFallback": "je vriend"
+  },
   "home": {
     "title": "Jouw vragen",
     "empty": "Nog geen vriendschappen — nodig iemand uit!"
