@@ -1,0 +1,31 @@
+{
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "next": "Volgende",
+    "back": "Terug",
+    "error": "Fout",
+    "loading": "Laden…",
+    "somethingWrong": "Er ging iets mis"
+  },
+  "home": {
+    "title": "Jouw vragen",
+    "empty": "Nog geen vriendschappen — nodig iemand uit!"
+  },
+  "profile": {
+    "changePhoto": "Foto wijzigen",
+    "displayName": "Weergavenaam",
+    "displayNamePlaceholder": "Je naam",
+    "save": "Opslaan",
+    "editPreferences": "✏️ Voorkeuren bewerken",
+    "signOut": "Uitloggen",
+    "invalidTitle": "Ongeldig",
+    "invalidDisplayName": "Weergavenaam moet 1–50 tekens zijn.",
+    "uploadFailed": "Uploaden mislukt"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "language": "Taal",
+    "languageSubtitle": "Kies je taal"
+  }
+}

@@ -14,6 +14,7 @@ import { useProfile } from '../hooks/useProfile';
 import { usePushToken } from '../hooks/usePushToken';
 import { colors } from '../theme/tokens';
 import * as Notifications from 'expo-notifications';
+import '../lib/i18n';
 
 export default function RootLayout() {
   const { session, loading } = useSession();

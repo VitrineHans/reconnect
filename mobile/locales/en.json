@@ -1,0 +1,31 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "next": "Next",
+    "back": "Back",
+    "error": "Error",
+    "loading": "Loading…",
+    "somethingWrong": "Something went wrong"
+  },
+  "home": {
+    "title": "Your Questions",
+    "empty": "No friendships yet — invite someone!"
+  },
+  "profile": {
+    "changePhoto": "Change photo",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "Your name",
+    "save": "Save",
+    "editPreferences": "✏️ Edit preferences",
+    "signOut": "Sign out",
+    "invalidTitle": "Invalid",
+    "invalidDisplayName": "Display name must be 1–50 characters.",
+    "uploadFailed": "Upload failed"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageSubtitle": "Choose your language"
+  }
+}

@@ -2,6 +2,7 @@ import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-nativ
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { useFriendships } from '../../hooks/useFriendships';
 import type { FriendshipWithState } from '../../hooks/useFriendships';
@@ -11,6 +12,7 @@ import { colors, typography, spacing } from '../../theme/tokens';
 export default function HomeScreen() {
   const { session } = useSession();
   const router = useRouter();
+  const { t } = useTranslation();
   const userId = session?.user?.id ?? null;
   const { friendships, loading, error, refetch } = useFriendships(userId);
 
@@ -55,11 +57,11 @@ export default function HomeScreen() {
       style={styles.screen}
       ListEmptyComponent={
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>No friendships yet — invite someone!</Text>
+          <Text style={styles.emptyText}>{t('home.empty')}</Text>
         </View>
       }
       ListHeaderComponent={
-        <Text style={styles.heading}>Your Questions</Text>
+        <Text style={styles.heading}>{t('home.title')}</Text>
       }
     />
   );

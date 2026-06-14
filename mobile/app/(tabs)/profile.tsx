@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, StyleSheet, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { useProfile } from '../../hooks/useProfile';
 import { supabase } from '../../lib/supabase';
@@ -11,6 +12,7 @@ export default function ProfileScreen() {
   const { session } = useSession();
   const { profile, profileLoading, refetch } = useProfile(session);
   const router = useRouter();
+  const { t } = useTranslation();
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -18,13 +20,13 @@ export default function ProfileScreen() {
 
   const saveDisplayName = async () => {
     if (!displayName.trim() || displayName.length > 50) {
-      Alert.alert('Invalid', 'Display name must be 1–50 characters.');
+      Alert.alert(t('profile.invalidTitle'), t('profile.invalidDisplayName'));
       return;
     }
     setSaving(true);
     const { error } = await supabase.from('profiles').update({ display_name: displayName.trim() }).eq('id', session!.user.id);
     setSaving(false);
-    if (error) { Alert.alert('Error', error.message); return; }
+    if (error) { Alert.alert(t('common.error'), error.message); return; }
     refetch();
   };
 
@@ -43,7 +45,7 @@ export default function ProfileScreen() {
     const response = await fetch(uri);
     const blob = await response.blob();
     const { error: uploadError } = await supabase.storage.from('avatars').upload(path, blob, { contentType: `image/${ext}` });
-    if (uploadError) { setUploading(false); Alert.alert('Upload failed', uploadError.message); return; }
+    if (uploadError) { setUploading(false); Alert.alert(t('profile.uploadFailed'), uploadError.message); return; }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', session!.user.id);
     setUploading(false);
@@ -77,20 +79,20 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             )}
-        <Text style={styles.changePhoto}>Change photo</Text>
+        <Text style={styles.changePhoto}>{t('profile.changePhoto')}</Text>
       </TouchableOpacity>
 
       <Text style={styles.username}>@{profile?.username}</Text>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Display name</Text>
+        <Text style={styles.label}>{t('profile.displayName')}</Text>
         <TextInput
           style={[styles.input, focused && styles.inputFocused]}
           value={displayName}
           onChangeText={setDisplayName}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="Your name"
+          placeholder={t('profile.displayNamePlaceholder')}
           placeholderTextColor={colors.textMuted}
         />
       </View>
@@ -98,15 +100,15 @@ export default function ProfileScreen() {
       <TouchableOpacity style={styles.button} onPress={saveDisplayName} disabled={saving}>
         {saving
           ? <ActivityIndicator color={colors.bg} />
-          : <Text style={styles.buttonText}>Save</Text>}
+          : <Text style={styles.buttonText}>{t('profile.save')}</Text>}
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.prefsButton} onPress={() => router.push('/(onboarding)/questionnaire')}>
-        <Text style={styles.prefsButtonText}>✏️ Edit preferences</Text>
+        <Text style={styles.prefsButtonText}>{t('profile.editPreferences')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-        <Text style={styles.signOutText}>Sign out</Text>
+        <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
