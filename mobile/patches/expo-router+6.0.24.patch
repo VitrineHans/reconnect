@@ -1,0 +1,126 @@
+diff --git a/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.mm b/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.mm
+index f20d576..a81e06d 100644
+--- a/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.mm
++++ b/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.mm
+@@ -6,6 +6,17 @@
+ #import <RNScreens/RNSScreen.h>
+ #import <RNScreens/RNSScreenStack.h>
+ 
++// RNSBottomTabs classes were added in a later version of react-native-screens.
++// Guard all references so older versions compile cleanly.
++#if __has_include(<RNScreens/RNSBottomTabsScreenComponentView.h>)
++#import <RNScreens/RNSBottomTabsScreenComponentView.h>
++#import <RNScreens/RNSBottomTabsHostComponentView.h>
++#import <RNScreens/RNSTabBarController.h>
++#define RNS_HAS_BOTTOM_TABS 1
++#else
++#define RNS_HAS_BOTTOM_TABS 0
++#endif
++
+ @implementation LinkPreviewNativeNavigationObjC {
+ }
+ 
+@@ -18,22 +29,25 @@ + (BOOL)isRNSScreenStackView:(UIView *)view {
+ }
+ 
+ + (BOOL)isRNSBottomTabsScreenComponentView:(UIView *)view {
++#if RNS_HAS_BOTTOM_TABS
+   if (view != nil) {
+     return [view isKindOfClass:[RNSBottomTabsScreenComponentView class]];
+   }
+-
++#endif
+   return NO;
+ }
+ 
+ + (BOOL)isRNSBottomTabsHostComponentView:(UIView *)view {
++#if RNS_HAS_BOTTOM_TABS
+   if (view != nil) {
+     return [view isKindOfClass:[RNSBottomTabsHostComponentView class]];
+   }
+-
++#endif
+   return NO;
+ }
+ 
+ + (nullable UITabBarController *)getBottomTabControllerFromView:(UIView *)view {
++#if RNS_HAS_BOTTOM_TABS
+   if ([view isKindOfClass:[RNSBottomTabsScreenComponentView class]]) {
+     RNSBottomTabsScreenComponentView *bottomTabsView =
+         (RNSBottomTabsScreenComponentView *)view;
+@@ -50,11 +64,13 @@ + (nullable UITabBarController *)getBottomTabControllerFromView:(UIView *)view {
+         (RNSBottomTabsHostComponentView *)view;
+     return [bottomTabsView controller];
+   }
++#endif
+   return nil;
+ }
+ 
+ + (nullable UIView *)getTab:(UITabBarController *)controller
+                     withKey:(NSString *)key {
++#if RNS_HAS_BOTTOM_TABS
+   if (controller != nil) {
+     for (UIViewController *subcontroller in controller.viewControllers) {
+       if ([subcontroller.view
+@@ -66,7 +82,7 @@ + (nullable UIView *)getTab:(UITabBarController *)controller
+       }
+     }
+   }
+-
++#endif
+   return nil;
+ }
+ 
+@@ -95,12 +111,14 @@ + (nonnull NSString *)getScreenId:(UIView *)view {
+ }
+ 
+ + (nonnull NSString *)getTabKey:(UIView *)view {
++#if RNS_HAS_BOTTOM_TABS
+   if (view != nil &&
+       [view isKindOfClass:[RNSBottomTabsScreenComponentView class]]) {
+     RNSBottomTabsScreenComponentView *tabScreenView =
+         (RNSBottomTabsScreenComponentView *)view;
+     return tabScreenView.tabKey;
+   }
++#endif
+   return @"";
+ }
+ 
+@@ -117,37 +135,24 @@ + (void)pushPreloadedView:(nonnull UIView *)view
+   RNSScreenStackView *stackView = (RNSScreenStackView *)rawStackView;
+   RNSScreenView *preloadedScreenView = (RNSScreenView *)view;
+   if (preloadedScreenView != nil && stackView != nil) {
+-    // Instead of pushing the preloaded screen view, we set its activity state
+-    // React native screens will then handle the rest.
+     [preloadedScreenView setActivityState:2];
+     [stackView markChildUpdated];
+-    // If the screen is modal with header then it will have exactly one child -
+-    // RNSNavigationController.
+-    // https://github.com/software-mansion/react-native-screens/blob/8b82e081e8fdfa6e0864821134bda9e87a745b00/src/components/ScreenStackItem.tsx#L146-L160
+     if (preloadedScreenView.isModal &&
+         preloadedScreenView.controller.childViewControllers.count == 1) {
+-      // The first child should be RNSNavigationController (<ScreenStack>).
+       UIViewController *navController =
+           preloadedScreenView.controller.childViewControllers[0];
+       if ([navController isKindOfClass:[RNSNavigationController class]]) {
+         RNSNavigationController *rnsNavController =
+             (RNSNavigationController *)navController;
+-        // The delegate of RNSNavigationController is RNSScreenStackView.
+         id<UINavigationControllerDelegate> delegate = rnsNavController.delegate;
+         if ([delegate isKindOfClass:[RNSScreenStackView class]]) {
+           RNSScreenStackView *innerScreenStack = (RNSScreenStackView *)delegate;
+-          // The first and only child of the inner screen stack should be
+-          // RNSScreenView (<ScreenStackItem>).
+           UIView *firstChild = innerScreenStack.reactSubviews != nil
+                                    ? innerScreenStack.reactSubviews[0]
+                                    : nil;
+           if (firstChild != nil &&
+               [firstChild isKindOfClass:[RNSScreenView class]]) {
+             RNSScreenView *screenContentView = (RNSScreenView *)firstChild;
+-            // Same as above, we let React Native Screens handle the transition.
+-            // We need to set the activity of inner screen as well, because its
+-            // react value is the same as the preloaded screen - 0.
+-            // https://github.com/software-mansion/react-native-screens/blob/8b82e081e8fdfa6e0864821134bda9e87a745b00/src/components/ScreenStackItem.tsx#L151
+             [screenContentView setActivityState:2];
+             [innerScreenStack markChildUpdated];
+           }
