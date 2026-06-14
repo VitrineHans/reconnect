@@ -1,109 +1,90 @@
 import { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Alert, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
 import { colors, typography, spacing, radius, shadows } from '../../theme/tokens';
 
 // ── Questions (fun → personal → deeper) ──────────────────────────────────────
+// Structure only — all display text lives in locales/<lang>.json under
+// `questionnaire.<key>` (prompt, subtitle, options.<value>, affirmations).
 
 const QUESTIONS = [
   {
     key: 'personality',
-    prompt: 'Pick your vibe ✨',
-    subtitle: 'Choose your character',
     type: 'choice' as const,
-    affirmation: ['Love it! That\'s so you 💅', 'Great pick!', 'Iconic ⚡', 'Vibes confirmed 🌿'],
     options: [
-      { label: 'The funny one', value: 'funny',     emoji: '😄', color: colors.yellow },
-      { label: 'The deep thinker', value: 'thinker', emoji: '🤔', color: colors.sky },
-      { label: 'The energiser', value: 'energiser',  emoji: '⚡', color: colors.primary },
-      { label: 'The calm one', value: 'calm',         emoji: '🌿', color: colors.mint },
+      { value: 'funny',     emoji: '😄', color: colors.yellow },
+      { value: 'thinker',   emoji: '🤔', color: colors.sky },
+      { value: 'energiser', emoji: '⚡', color: colors.primary },
+      { value: 'calm',      emoji: '🌿', color: colors.mint },
     ],
   },
   {
     key: 'interests',
-    prompt: 'What do you love? 💛',
-    subtitle: 'Pick all that apply',
     type: 'multi' as const,
-    affirmation: ['Nice taste!', 'Good mix!', 'You\'re interesting 👀', 'Love that!'],
     options: [
-      { label: '🎵 Music',       value: 'music' },
-      { label: '🏃 Sport',       value: 'sport' },
-      { label: '✈️ Travel',      value: 'travel' },
-      { label: '🍕 Food',        value: 'food' },
-      { label: '🎮 Gaming',      value: 'gaming' },
-      { label: '📚 Reading',     value: 'reading' },
-      { label: '🎨 Creative',    value: 'creative' },
-      { label: '🎬 Film & TV',   value: 'film' },
-      { label: '🌱 Wellness',    value: 'wellness' },
-      { label: '🐾 Animals',     value: 'animals' },
+      { value: 'music' },
+      { value: 'sport' },
+      { value: 'travel' },
+      { value: 'food' },
+      { value: 'gaming' },
+      { value: 'reading' },
+      { value: 'creative' },
+      { value: 'film' },
+      { value: 'wellness' },
+      { value: 'animals' },
     ],
   },
   {
     key: 'age_range',
-    prompt: 'How old are you? 🎂',
-    subtitle: 'Just between us',
     type: 'choice' as const,
-    affirmation: ['Got it! 🙌', 'Noted!', 'Perfect!', 'Sweet!'],
     options: [
-      { label: 'Under 18', value: 'u18',   emoji: '🌱', color: colors.mint },
-      { label: '18 – 24',  value: '18-24', emoji: '🎓', color: colors.yellow },
-      { label: '25 – 34',  value: '25-34', emoji: '💼', color: colors.primary },
-      { label: '35 – 44',  value: '35-44', emoji: '🌟', color: colors.sky },
-      { label: '45+',      value: '45+',   emoji: '👑', color: colors.lilac },
+      { value: 'u18',   emoji: '🌱', color: colors.mint },
+      { value: '18-24', emoji: '🎓', color: colors.yellow },
+      { value: '25-34', emoji: '💼', color: colors.primary },
+      { value: '35-44', emoji: '🌟', color: colors.sky },
+      { value: '45+',   emoji: '👑', color: colors.lilac },
     ],
   },
   {
     key: 'country',
-    prompt: 'Where do you live? 🌍',
-    subtitle: 'So we can ask relevant questions',
     type: 'choice' as const,
-    affirmation: ['Great place! 🗺️', 'Noted!', 'Lovely!', 'Cool!'],
     options: [
-      { label: '🇳🇱 Netherlands', value: 'nl', emoji: '🇳🇱', color: colors.sky },
-      { label: '🇧🇪 Belgium',     value: 'be', emoji: '🇧🇪', color: colors.yellow },
-      { label: '🇩🇪 Germany',     value: 'de', emoji: '🇩🇪', color: colors.primary },
-      { label: '🇬🇧 UK',          value: 'uk', emoji: '🇬🇧', color: colors.mint },
-      { label: '🇺🇸 USA',         value: 'us', emoji: '🇺🇸', color: colors.sky },
-      { label: '🌐 Somewhere else', value: 'other', emoji: '🌐', color: colors.lilac },
+      { value: 'nl', emoji: '🇳🇱', color: colors.sky },
+      { value: 'be', emoji: '🇧🇪', color: colors.yellow },
+      { value: 'de', emoji: '🇩🇪', color: colors.primary },
+      { value: 'uk', emoji: '🇬🇧', color: colors.mint },
+      { value: 'us', emoji: '🇺🇸', color: colors.sky },
+      { value: 'other', emoji: '🌐', color: colors.lilac },
     ],
   },
   {
     key: 'life_stage',
-    prompt: 'What\'s your life like right now?',
-    subtitle: 'No judgment here',
     type: 'choice' as const,
-    affirmation: ['Sounds great!', 'Love it!', 'Respect 🙌', 'Exciting times!'],
     options: [
-      { label: 'Studying',      value: 'studying',  emoji: '🎓', color: colors.yellow },
-      { label: 'Working',       value: 'working',   emoji: '💼', color: colors.primary },
-      { label: 'Parent life',   value: 'parent',    emoji: '👶', color: colors.mint },
-      { label: 'Figuring it out', value: 'exploring', emoji: '🌱', color: colors.sky },
+      { value: 'studying',  emoji: '🎓', color: colors.yellow },
+      { value: 'working',   emoji: '💼', color: colors.primary },
+      { value: 'parent',    emoji: '👶', color: colors.mint },
+      { value: 'exploring', emoji: '🌱', color: colors.sky },
     ],
   },
   {
     key: 'depth_comfort',
-    prompt: 'How deep can questions get? 🤿',
-    subtitle: 'Be honest — there\'s no wrong answer',
     type: 'scale' as const,
     min: 1,
     max: 5,
-    affirmation: ['Perfect for you!', 'Got it!', 'Noted!', 'We\'ll match that!'],
-    scaleLabels: { 1: 'Keep it light', 5: 'Go deep' },
   },
   {
     key: 'off_limits',
-    prompt: 'Anything off-limits?',
-    subtitle: 'We\'ll skip these topics',
     type: 'multi' as const,
-    affirmation: ['Respect. We\'ve got you 🛡️', 'Noted!', 'Of course!', 'Totally fair!'],
     options: [
-      { label: '👨‍👩‍👧 Family',        value: 'family' },
-      { label: '💰 Money',          value: 'money' },
-      { label: '❤️ Relationships',  value: 'relationships' },
-      { label: '🏥 Health',         value: 'health' },
-      { label: '🙅 Nothing!',       value: 'none' },
+      { value: 'family' },
+      { value: 'money' },
+      { value: 'relationships' },
+      { value: 'health' },
+      { value: 'none' },
     ],
   },
 ] as const;
@@ -248,6 +229,7 @@ function ScaleSelector({
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function QuestionnaireScreen() {
+  const { t } = useTranslation();
   const { session } = useSession();
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -282,9 +264,8 @@ export default function QuestionnaireScreen() {
     (Array.isArray(currentAnswer) ? currentAnswer.length > 0 : currentAnswer !== '');
 
   const triggerAffirmation = (key: string) => {
-    const q = QUESTIONS.find(q => q.key === key);
-    if (!q?.affirmation) return;
-    const texts = q.affirmation as readonly string[];
+    const texts = t(`questionnaire.${key}.affirmations`, { returnObjects: true }) as unknown as string[];
+    if (!Array.isArray(texts) || texts.length === 0) return;
     const text = texts[Math.floor(Math.random() * texts.length)];
     setAffirmationText(text);
     setShowAffirmation(true);
@@ -319,7 +300,7 @@ export default function QuestionnaireScreen() {
       .update({ onboarding_answers: answers })
       .eq('id', session!.user.id);
     setLoading(false);
-    if (error) { Alert.alert('Error', error.message); return; }
+    if (error) { Alert.alert(t('common.error'), error.message); return; }
     router.replace('/(tabs)/home');
   };
 
@@ -332,7 +313,7 @@ export default function QuestionnaireScreen() {
           min={q.min}
           max={q.max}
           value={currentAnswer as number | undefined}
-          labels={(q as { scaleLabels?: { [k: number]: string } }).scaleLabels}
+          labels={{ [q.min]: t(`questionnaire.${q.key}.scaleMin`), [q.max]: t(`questionnaire.${q.key}.scaleMax`) }}
           onChange={(n) => setAnswer(q.key, n)}
         />
       );
@@ -348,7 +329,7 @@ export default function QuestionnaireScreen() {
             return (
               <Chip
                 key={opt.value}
-                label={opt.label}
+                label={t(`questionnaire.${q.key}.options.${opt.value}`)}
                 selected={selected}
                 onPress={() => {
                   const prev = Array.isArray(currentAnswer) ? currentAnswer : [];
@@ -372,7 +353,7 @@ export default function QuestionnaireScreen() {
           return (
             <ChoiceTile
               key={opt.value}
-              label={opt.label}
+              label={t(`questionnaire.${q.key}.options.${opt.value}`)}
               emoji={emoji}
               color={color}
               selected={selected}
@@ -392,7 +373,7 @@ export default function QuestionnaireScreen() {
     );
   }
 
-  const lastBtnLabel = isEditing ? '✓ Save changes' : '🎉 Let\'s go!';
+  const lastBtnLabel = isEditing ? t('questionnaire.saveChanges') : t('questionnaire.letsGo');
 
   return (
     <View style={styles.screen}>
@@ -402,10 +383,10 @@ export default function QuestionnaireScreen() {
         <View style={styles.headerRow}>
           {step > 0 ? (
             <TouchableOpacity onPress={() => { setStep((s) => s - 1); setShowAffirmation(false); }}>
-              <Text style={styles.backBtn}>← Back</Text>
+              <Text style={styles.backBtn}>{t('questionnaire.back')}</Text>
             </TouchableOpacity>
           ) : <View />}
-          <Text style={styles.stepLabel}>{step + 1} of {QUESTIONS.length}</Text>
+          <Text style={styles.stepLabel}>{t('questionnaire.stepLabel', { current: step + 1, total: QUESTIONS.length })}</Text>
         </View>
       </View>
 
@@ -413,8 +394,8 @@ export default function QuestionnaireScreen() {
         <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
           {/* Question card */}
           <View style={styles.card}>
-            <Text style={styles.subtitle}>{q.subtitle}</Text>
-            <Text style={styles.prompt}>{q.prompt}</Text>
+            <Text style={styles.subtitle}>{t(`questionnaire.${q.key}.subtitle`)}</Text>
+            <Text style={styles.prompt}>{t(`questionnaire.${q.key}.prompt`)}</Text>
             {renderOptions()}
             <Affirmation text={affirmationText} visible={showAffirmation && hasAnswer} />
           </View>
@@ -431,7 +412,7 @@ export default function QuestionnaireScreen() {
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.btnText}>{isLast ? lastBtnLabel : 'Next →'}</Text>}
+            : <Text style={styles.btnText}>{isLast ? lastBtnLabel : t('questionnaire.next')}</Text>}
         </TouchableOpacity>
       </View>
     </View>

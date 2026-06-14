@@ -65,6 +65,96 @@
     "streakRiskBody": "You have 4 hours left to answer for {{name}}!",
     "friendFallback": "your friend"
   },
+  "questionnaire": {
+    "stepLabel": "{{current}} of {{total}}",
+    "back": "← Back",
+    "next": "Next →",
+    "saveChanges": "✓ Save changes",
+    "letsGo": "🎉 Let's go!",
+    "personality": {
+      "prompt": "Pick your vibe ✨",
+      "subtitle": "Choose your character",
+      "options": {
+        "funny": "The funny one",
+        "thinker": "The deep thinker",
+        "energiser": "The energiser",
+        "calm": "The calm one"
+      },
+      "affirmations": ["Love it! That's so you 💅", "Great pick!", "Iconic ⚡", "Vibes confirmed 🌿"]
+    },
+    "interests": {
+      "prompt": "What do you love? 💛",
+      "subtitle": "Pick all that apply",
+      "options": {
+        "music": "🎵 Music",
+        "sport": "🏃 Sport",
+        "travel": "✈️ Travel",
+        "food": "🍕 Food",
+        "gaming": "🎮 Gaming",
+        "reading": "📚 Reading",
+        "creative": "🎨 Creative",
+        "film": "🎬 Film & TV",
+        "wellness": "🌱 Wellness",
+        "animals": "🐾 Animals"
+      },
+      "affirmations": ["Nice taste!", "Good mix!", "You're interesting 👀", "Love that!"]
+    },
+    "age_range": {
+      "prompt": "How old are you? 🎂",
+      "subtitle": "Just between us",
+      "options": {
+        "u18": "Under 18",
+        "18-24": "18 – 24",
+        "25-34": "25 – 34",
+        "35-44": "35 – 44",
+        "45+": "45+"
+      },
+      "affirmations": ["Got it! 🙌", "Noted!", "Perfect!", "Sweet!"]
+    },
+    "country": {
+      "prompt": "Where do you live? 🌍",
+      "subtitle": "So we can ask relevant questions",
+      "options": {
+        "nl": "🇳🇱 Netherlands",
+        "be": "🇧🇪 Belgium",
+        "de": "🇩🇪 Germany",
+        "uk": "🇬🇧 UK",
+        "us": "🇺🇸 USA",
+        "other": "🌐 Somewhere else"
+      },
+      "affirmations": ["Great place! 🗺️", "Noted!", "Lovely!", "Cool!"]
+    },
+    "life_stage": {
+      "prompt": "What's your life like right now?",
+      "subtitle": "No judgment here",
+      "options": {
+        "studying": "Studying",
+        "working": "Working",
+        "parent": "Parent life",
+        "exploring": "Figuring it out"
+      },
+      "affirmations": ["Sounds great!", "Love it!", "Respect 🙌", "Exciting times!"]
+    },
+    "depth_comfort": {
+      "prompt": "How deep can questions get? 🤿",
+      "subtitle": "Be honest — there's no wrong answer",
+      "scaleMin": "Keep it light",
+      "scaleMax": "Go deep",
+      "affirmations": ["Perfect for you!", "Got it!", "Noted!", "We'll match that!"]
+    },
+    "off_limits": {
+      "prompt": "Anything off-limits?",
+      "subtitle": "We'll skip these topics",
+      "options": {
+        "family": "👨‍👩‍👧 Family",
+        "money": "💰 Money",
+        "relationships": "❤️ Relationships",
+        "health": "🏥 Health",
+        "none": "🙅 Nothing!"
+      },
+      "affirmations": ["Respect. We've got you 🛡️", "Noted!", "Of course!", "Totally fair!"]
+    }
+  },
   "home": {
     "title": "Your Questions",
     "empty": "No friendships yet — invite someone!"

@@ -65,6 +65,96 @@
     "streakRiskBody": "Je hebt nog 4 uur om te antwoorden voor {{name}}!",
     "friendFallback": "je vriend"
   },
+  "questionnaire": {
+    "stepLabel": "{{current}} van {{total}}",
+    "back": "← Terug",
+    "next": "Volgende →",
+    "saveChanges": "✓ Wijzigingen opslaan",
+    "letsGo": "🎉 We gaan!",
+    "personality": {
+      "prompt": "Kies je vibe ✨",
+      "subtitle": "Kies je personage",
+      "options": {
+        "funny": "De grappige",
+        "thinker": "De diepe denker",
+        "energiser": "De energieke",
+        "calm": "De rustige"
+      },
+      "affirmations": ["Top! Dat ben jij 💅", "Goede keuze!", "Iconisch ⚡", "Vibe bevestigd 🌿"]
+    },
+    "interests": {
+      "prompt": "Waar hou je van? 💛",
+      "subtitle": "Kies alles wat past",
+      "options": {
+        "music": "🎵 Muziek",
+        "sport": "🏃 Sport",
+        "travel": "✈️ Reizen",
+        "food": "🍕 Eten",
+        "gaming": "🎮 Gamen",
+        "reading": "📚 Lezen",
+        "creative": "🎨 Creatief",
+        "film": "🎬 Film & TV",
+        "wellness": "🌱 Welzijn",
+        "animals": "🐾 Dieren"
+      },
+      "affirmations": ["Goede smaak!", "Lekkere mix!", "Je bent interessant 👀", "Mooi!"]
+    },
+    "age_range": {
+      "prompt": "Hoe oud ben je? 🎂",
+      "subtitle": "Tussen ons",
+      "options": {
+        "u18": "Onder 18",
+        "18-24": "18 – 24",
+        "25-34": "25 – 34",
+        "35-44": "35 – 44",
+        "45+": "45+"
+      },
+      "affirmations": ["Genoteerd! 🙌", "Genoteerd!", "Perfect!", "Mooi!"]
+    },
+    "country": {
+      "prompt": "Waar woon je? 🌍",
+      "subtitle": "Zodat we relevante vragen stellen",
+      "options": {
+        "nl": "🇳🇱 Nederland",
+        "be": "🇧🇪 België",
+        "de": "🇩🇪 Duitsland",
+        "uk": "🇬🇧 VK",
+        "us": "🇺🇸 VS",
+        "other": "🌐 Ergens anders"
+      },
+      "affirmations": ["Mooie plek! 🗺️", "Genoteerd!", "Leuk!", "Cool!"]
+    },
+    "life_stage": {
+      "prompt": "Hoe is je leven nu?",
+      "subtitle": "Geen oordeel hier",
+      "options": {
+        "studying": "Studeren",
+        "working": "Werken",
+        "parent": "Ouderschap",
+        "exploring": "Aan het uitzoeken"
+      },
+      "affirmations": ["Klinkt goed!", "Mooi!", "Respect 🙌", "Spannende tijden!"]
+    },
+    "depth_comfort": {
+      "prompt": "Hoe diep mogen vragen gaan? 🤿",
+      "subtitle": "Wees eerlijk — er is geen fout antwoord",
+      "scaleMin": "Hou het licht",
+      "scaleMax": "Ga diep",
+      "affirmations": ["Perfect voor jou!", "Genoteerd!", "Genoteerd!", "Daar passen we ons op aan!"]
+    },
+    "off_limits": {
+      "prompt": "Iets dat verboden terrein is?",
+      "subtitle": "We slaan deze onderwerpen over",
+      "options": {
+        "family": "👨‍👩‍👧 Familie",
+        "money": "💰 Geld",
+        "relationships": "❤️ Relaties",
+        "health": "🏥 Gezondheid",
+        "none": "🙅 Niks!"
+      },
+      "affirmations": ["Respect. We snappen het 🛡️", "Genoteerd!", "Natuurlijk!", "Helemaal terecht!"]
+    }
+  },
   "home": {
     "title": "Jouw vragen",
     "empty": "Nog geen vriendschappen — nodig iemand uit!"
