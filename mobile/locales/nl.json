@@ -12,6 +12,19 @@
     "title": "Jouw vragen",
     "empty": "Nog geen vriendschappen — nodig iemand uit!"
   },
+  "card": {
+    "timeLeft": "nog {{hours}}u {{minutes}}m",
+    "state": {
+      "revealReady": "👀  Klaar om te onthullen",
+      "yourTurn": "⏳  Jouw beurt",
+      "waiting": "💤  Wachten op hen"
+    },
+    "cta": {
+      "reveal": "Nu bekijken 👀",
+      "yourTurn": "Antwoord opnemen",
+      "waiting": "Wachten op {{name}}..."
+    }
+  },
   "profile": {
     "changePhoto": "Foto wijzigen",
     "displayName": "Weergavenaam",
@@ -27,5 +40,10 @@
     "title": "Instellingen",
     "language": "Taal",
     "languageSubtitle": "Kies je taal"
+  },
+  "tabs": {
+    "home": "Start",
+    "friends": "Vrienden",
+    "profile": "Profiel"
   }
 }

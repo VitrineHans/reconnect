@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { FriendshipWithState, FriendshipState } from '../hooks/useFriendships';
 import { colors, radius, shadows, spacing, typography } from '../theme/tokens';
 
@@ -10,12 +12,11 @@ export interface FriendshipCardProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getTimeRemaining(expiresAt: string): string {
+function getTimeRemaining(expiresAt: string, t: TFunction): string {
   const diff = Date.parse(expiresAt) - Date.now();
-  if (diff <= 0) return '0h 0m left';
-  const hours = Math.floor(diff / 3_600_000);
-  const minutes = Math.floor((diff % 3_600_000) / 60_000);
-  return `${hours}h ${minutes}m left`;
+  const hours = Math.max(0, Math.floor(diff / 3_600_000));
+  const minutes = Math.max(0, Math.floor((diff % 3_600_000) / 60_000));
+  return t('card.timeLeft', { hours, minutes });
 }
 
 function getInitials(name: string): string {
@@ -50,15 +51,16 @@ function StreakBadge({ count }: { count: number }) {
   );
 }
 
-const STATE_META: Record<FriendshipState, { label: string; labelColor: string }> = {
-  reveal_ready: { label: '👀  Reveal ready',      labelColor: colors.gold },
-  your_turn:    { label: '⏳  Your turn',          labelColor: colors.ember },
-  waiting:      { label: '💤  Waiting for them',   labelColor: colors.textMuted },
+const STATE_META: Record<FriendshipState, { labelKey: string; labelColor: string }> = {
+  reveal_ready: { labelKey: 'card.state.revealReady', labelColor: colors.gold },
+  your_turn:    { labelKey: 'card.state.yourTurn',     labelColor: colors.ember },
+  waiting:      { labelKey: 'card.state.waiting',      labelColor: colors.textMuted },
 };
 
 function StateLabel({ state }: { state: FriendshipState }) {
-  const { label, labelColor } = STATE_META[state];
-  return <Text style={[styles.stateLabel, { color: labelColor }]}>{label}</Text>;
+  const { t } = useTranslation();
+  const { labelKey, labelColor } = STATE_META[state];
+  return <Text style={[styles.stateLabel, { color: labelColor }]}>{t(labelKey)}</Text>;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -66,6 +68,7 @@ function StateLabel({ state }: { state: FriendshipState }) {
 export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
   const { id, friendProfile, streakCount, questionText, state, expiresAt } = friendship;
   const friendName = friendProfile.display_name ?? friendProfile.username;
+  const { t } = useTranslation();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   // Breathing pulse for reveal_ready state
@@ -94,13 +97,13 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
 
   // Countdown for your_turn
   const [countdown, setCountdown] = useState(
-    expiresAt ? getTimeRemaining(expiresAt) : '',
+    expiresAt ? getTimeRemaining(expiresAt, t) : '',
   );
   useEffect(() => {
     if (!expiresAt || state !== 'your_turn') return;
-    const iv = setInterval(() => setCountdown(getTimeRemaining(expiresAt)), 60_000);
+    const iv = setInterval(() => setCountdown(getTimeRemaining(expiresAt, t)), 60_000);
     return () => clearInterval(iv);
-  }, [expiresAt, state]);
+  }, [expiresAt, state, t]);
 
   const borderColor =
     state === 'reveal_ready' ? colors.stateRevealReady
@@ -168,10 +171,10 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
             ]}
           >
             {state === 'reveal_ready'
-              ? 'Watch Now 👀'
+              ? t('card.cta.reveal')
               : state === 'your_turn'
-              ? 'Record Answer'
-              : `Waiting for ${friendName}...`}
+              ? t('card.cta.yourTurn')
+              : t('card.cta.waiting', { name: friendName })}
           </Text>
         </View>
       </Animated.View>

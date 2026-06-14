@@ -1,16 +1,18 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Slot, useRouter, usePathname } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing } from '../../theme/tokens';
 
 const TABS = [
-  { name: 'home',    label: 'Home',    icon: '🏠' },
-  { name: 'friends', label: 'Friends', icon: '👯' },
-  { name: 'profile', label: 'Profile', icon: '👤' },
+  { name: 'home',    labelKey: 'tabs.home',    icon: '🏠' },
+  { name: 'friends', labelKey: 'tabs.friends', icon: '👯' },
+  { name: 'profile', labelKey: 'tabs.profile', icon: '👤' },
 ] as const;
 
 export default function TabsLayout() {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.root}>
@@ -28,7 +30,7 @@ export default function TabsLayout() {
               activeOpacity={0.7}
             >
               <Text style={styles.icon}>{tab.icon}</Text>
-              <Text style={[styles.label, active && styles.labelActive]}>{tab.label}</Text>
+              <Text style={[styles.label, active && styles.labelActive]}>{t(tab.labelKey)}</Text>
               {active && <View style={styles.dot} />}
             </TouchableOpacity>
           );

@@ -12,6 +12,19 @@
     "title": "Your Questions",
     "empty": "No friendships yet — invite someone!"
   },
+  "card": {
+    "timeLeft": "{{hours}}h {{minutes}}m left",
+    "state": {
+      "revealReady": "👀  Reveal ready",
+      "yourTurn": "⏳  Your turn",
+      "waiting": "💤  Waiting for them"
+    },
+    "cta": {
+      "reveal": "Watch Now 👀",
+      "yourTurn": "Record Answer",
+      "waiting": "Waiting for {{name}}..."
+    }
+  },
   "profile": {
     "changePhoto": "Change photo",
     "displayName": "Display name",
@@ -27,5 +40,10 @@
     "title": "Settings",
     "language": "Language",
     "languageSubtitle": "Choose your language"
+  },
+  "tabs": {
+    "home": "Home",
+    "friends": "Friends",
+    "profile": "Profile"
   }
 }
