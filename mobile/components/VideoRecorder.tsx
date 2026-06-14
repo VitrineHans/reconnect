@@ -6,6 +6,7 @@ import {
   useMicrophonePermissions,
 } from 'expo-camera';
 import * as Device from 'expo-device';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radius } from '../theme/tokens';
 
 // Simulator has no real camera — stub the video so the full flow is testable
@@ -21,6 +22,7 @@ type Props = {
 const MAX_DURATION = 30;
 
 export function VideoRecorder({ onVideoReady, onCancel }: Props) {
+  const { t } = useTranslation();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
@@ -62,19 +64,19 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
   if (!cameraPermission?.granted || !micPermission?.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Text style={styles.permissionText}>Camera and microphone access required.</Text>
+        <Text style={styles.permissionText}>{t('recorder.permissionRequired')}</Text>
         {!cameraPermission?.granted && (
           <TouchableOpacity style={styles.permissionButton} onPress={requestCameraPermission}>
-            <Text style={styles.permissionButtonText}>Allow Camera</Text>
+            <Text style={styles.permissionButtonText}>{t('recorder.allowCamera')}</Text>
           </TouchableOpacity>
         )}
         {!micPermission?.granted && (
           <TouchableOpacity style={styles.permissionButton} onPress={requestMicPermission}>
-            <Text style={styles.permissionButtonText}>Allow Microphone</Text>
+            <Text style={styles.permissionButtonText}>{t('recorder.allowMicrophone')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-          <Text style={styles.cancelText}>Cancel</Text>
+          <Text style={styles.cancelText}>{t('recorder.cancel')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -201,27 +203,27 @@ export function VideoRecorder({ onVideoReady, onCancel }: Props) {
         {recordingState === 'idle' && (
           <>
             <TouchableOpacity style={styles.recordButton} onPress={handleRecord}>
-              <Text style={styles.recordButtonText}>Record</Text>
+              <Text style={styles.recordButtonText}>{t('recorder.record')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>{t('recorder.cancel')}</Text>
             </TouchableOpacity>
           </>
         )}
 
         {recordingState === 'recording' && (
           <TouchableOpacity style={styles.stopButton} onPress={handleStop}>
-            <Text style={styles.stopButtonText}>Stop</Text>
+            <Text style={styles.stopButtonText}>{t('recorder.stop')}</Text>
           </TouchableOpacity>
         )}
 
         {recordingState === 'preview' && (
           <>
             <TouchableOpacity style={styles.recordButton} onPress={handleSubmit}>
-              <Text style={styles.recordButtonText}>Submit</Text>
+              <Text style={styles.recordButtonText}>{t('recorder.submit')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={handleReRecord}>
-              <Text style={styles.cancelText}>Re-record</Text>
+              <Text style={styles.cancelText}>{t('recorder.reRecord')}</Text>
             </TouchableOpacity>
           </>
         )}

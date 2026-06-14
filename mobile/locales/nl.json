@@ -155,6 +155,17 @@
       "affirmations": ["Respect. We snappen het 🛡️", "Genoteerd!", "Natuurlijk!", "Helemaal terecht!"]
     }
   },
+  "recorder": {
+    "permissionRequired": "Toegang tot camera en microfoon vereist.",
+    "allowCamera": "Camera toestaan",
+    "allowMicrophone": "Microfoon toestaan",
+    "cancel": "Annuleren",
+    "record": "Opnemen",
+    "stop": "Stoppen",
+    "submit": "Versturen",
+    "reRecord": "Opnieuw opnemen",
+    "playError": "Kon video niet afspelen."
+  },
   "home": {
     "title": "Jouw vragen",
     "empty": "Nog geen vriendschappen — nodig iemand uit!"

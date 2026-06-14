@@ -155,6 +155,17 @@
       "affirmations": ["Respect. We've got you 🛡️", "Noted!", "Of course!", "Totally fair!"]
     }
   },
+  "recorder": {
+    "permissionRequired": "Camera and microphone access required.",
+    "allowCamera": "Allow Camera",
+    "allowMicrophone": "Allow Microphone",
+    "cancel": "Cancel",
+    "record": "Record",
+    "stop": "Stop",
+    "submit": "Submit",
+    "reRecord": "Re-record",
+    "playError": "Could not play video."
+  },
   "home": {
     "title": "Your Questions",
     "empty": "No friendships yet — invite someone!"

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { colors, typography, spacing } from '../theme/tokens';
 
@@ -42,6 +43,7 @@ async function completeReveal(
 }
 
 export function VideoPlayer({ signedUrl, storagePath, friendshipId, questionId, onWatched }: VideoPlayerProps) {
+  const { t } = useTranslation();
   const hasWatchedRef = useRef(false);
   const [done, setDone] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
@@ -59,10 +61,10 @@ export function VideoPlayer({ signedUrl, storagePath, friendshipId, questionId, 
       completeReveal(storagePath, friendshipId, questionId).catch(() => {}).finally(() => onWatched());
     });
     const statusSub = player.addListener('statusChange', ({ status, error }) => {
-      if (status === 'error') setPlayError(error?.message ?? 'Could not play video.');
+      if (status === 'error') setPlayError(error?.message ?? t('recorder.playError'));
     });
     return () => { endSub.remove(); statusSub.remove(); };
-  }, [player, storagePath, friendshipId, questionId, onWatched]);
+  }, [player, storagePath, friendshipId, questionId, onWatched, t]);
 
   if (done) {
     return (
