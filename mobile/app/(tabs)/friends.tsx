@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
 import { sendExpoPushNotification } from '../../hooks/useNotifications';
@@ -48,6 +49,7 @@ async function fetchFriendships(userId: string): Promise<Friendship[]> {
 // ── Data hook ──────────────────────────────────────────────────────────────
 
 function useFriendsData(userId: string | undefined) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<ProfileSummary[]>([]);
   const [pendingInvites, setPendingInvites] = useState<FriendInvite[]>([]);
@@ -76,8 +78,8 @@ function useFriendsData(userId: string | undefined) {
 
   const sendInvite = async (toUserId: string) => {
     const { error } = await supabase.from('friend_invites').insert({ from_user: userId, to_user: toUserId });
-    if (error?.code === '23505') { Alert.alert('Already sent', 'You already sent this person an invite.'); return; }
-    if (error) { Alert.alert('Error', error.message); return; }
+    if (error?.code === '23505') { Alert.alert(t('friends.alreadySentTitle'), t('friends.alreadySentBody')); return; }
+    if (error) { Alert.alert(t('common.error'), error.message); return; }
     try {
       const { data: recipientProfile } = await supabase
         .from('profiles')
@@ -85,10 +87,12 @@ function useFriendsData(userId: string | undefined) {
         .eq('id', toUserId)
         .single();
       if (recipientProfile?.push_token) {
+        // NOTE: sent in the sender's language; localize to the recipient's
+        // stored locale once profiles persist a language preference.
         await sendExpoPushNotification(
           recipientProfile.push_token,
-          'New friend request! 👋',
-          'Someone wants to connect with you on Reconnect',
+          t('friends.pushInviteTitle'),
+          t('friends.pushInviteBody'),
           { screen: 'friends' },
         );
       }
@@ -100,7 +104,7 @@ function useFriendsData(userId: string | undefined) {
 
   const respondToInvite = async (inviteId: string, status: 'accepted' | 'declined') => {
     const { error } = await supabase.from('friend_invites').update({ status }).eq('id', inviteId);
-    if (error) { Alert.alert('Error', error.message); return; }
+    if (error) { Alert.alert(t('common.error'), error.message); return; }
     if (status === 'accepted') {
       // Assign a question to the new friendship immediately (cron only runs at midnight)
       await supabase.rpc('rotate_daily_questions');
@@ -114,6 +118,7 @@ function useFriendsData(userId: string | undefined) {
 // ── Sub-components ─────────────────────────────────────────────────────────
 
 function SearchResultCard({ profile, onAdd }: { profile: ProfileSummary; onAdd: () => void }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.card}>
       <View style={styles.cardInfo}>
@@ -121,18 +126,19 @@ function SearchResultCard({ profile, onAdd }: { profile: ProfileSummary; onAdd: 
         <Text style={styles.cardSub}>@{profile.username}</Text>
       </View>
       <TouchableOpacity style={styles.addButton} onPress={onAdd}>
-        <Text style={styles.addButtonText}>Add</Text>
+        <Text style={styles.addButtonText}>{t('friends.add')}</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 function InviteCard({ invite, onAccept, onDecline }: { invite: FriendInvite; onAccept: () => void; onDecline: () => void }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.card}>
       <View style={styles.cardInfo}>
         <Text style={styles.cardName}>{invite.profile.display_name ?? invite.profile.username}</Text>
-        <Text style={styles.cardSub}>@{invite.profile.username} wants to connect 👋</Text>
+        <Text style={styles.cardSub}>{t('friends.wantsToConnect', { username: invite.profile.username })}</Text>
       </View>
       <View style={styles.inviteActions}>
         <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
@@ -165,17 +171,18 @@ function FriendCard({ friendship }: { friendship: Friendship }) {
 // ── Main screen ────────────────────────────────────────────────────────────
 
 export default function FriendsScreen() {
+  const { t } = useTranslation();
   const { session } = useSession();
   const userId = session?.user?.id;
   const { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite } = useFriendsData(userId);
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Friends 👯</Text>
+      <Text style={styles.title}>{t('friends.title')}</Text>
 
       <TextInput
         style={styles.searchInput}
-        placeholder="Search by username..."
+        placeholder={t('friends.searchPlaceholder')}
         placeholderTextColor={colors.textMuted}
         value={search}
         onChangeText={setSearch}
@@ -184,10 +191,10 @@ export default function FriendsScreen() {
       />
 
       {search.length > 0 && searchResults.length === 0 && (
-        <Text style={styles.emptyHint}>No users found</Text>
+        <Text style={styles.emptyHint}>{t('friends.noUsersFound')}</Text>
       )}
       {search.length === 0 && (
-        <Text style={styles.emptyHint}>Search for friends by username</Text>
+        <Text style={styles.emptyHint}>{t('friends.searchHint')}</Text>
       )}
       {searchResults.map(p => (
         <SearchResultCard key={p.id} profile={p} onAdd={() => sendInvite(p.id)} />
@@ -195,7 +202,7 @@ export default function FriendsScreen() {
 
       {pendingInvites.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>Pending invites</Text>
+          <Text style={styles.sectionTitle}>{t('friends.pendingInvites')}</Text>
           {pendingInvites.map(inv => (
             <InviteCard
               key={inv.id}
@@ -207,10 +214,10 @@ export default function FriendsScreen() {
         </>
       )}
 
-      <Text style={styles.sectionTitle}>My Friends</Text>
+      <Text style={styles.sectionTitle}>{t('friends.myFriends')}</Text>
       {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: spacing[4] }} />}
       {!loading && friendships.length === 0 && (
-        <Text style={styles.emptyHint}>No friends yet — search above to add someone 🙌</Text>
+        <Text style={styles.emptyHint}>{t('friends.noFriends')}</Text>
       )}
       {friendships.map(f => (
         <FriendCard key={f.id} friendship={f} />

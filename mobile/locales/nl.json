@@ -33,6 +33,21 @@
     "usernameRules": "Gebruik 3–20 tekens: alleen letters, cijfers en underscores.",
     "usernameTaken": "Die gebruikersnaam is al bezet. Probeer een andere."
   },
+  "friends": {
+    "title": "Vrienden 👯",
+    "searchPlaceholder": "Zoek op gebruikersnaam...",
+    "noUsersFound": "Geen gebruikers gevonden",
+    "searchHint": "Zoek vrienden op gebruikersnaam",
+    "add": "Toevoegen",
+    "wantsToConnect": "@{{username}} wil contact maken 👋",
+    "pendingInvites": "Openstaande uitnodigingen",
+    "myFriends": "Mijn vrienden",
+    "noFriends": "Nog geen vrienden — zoek hierboven om iemand toe te voegen 🙌",
+    "alreadySentTitle": "Al verstuurd",
+    "alreadySentBody": "Je hebt deze persoon al een uitnodiging gestuurd.",
+    "pushInviteTitle": "Nieuw vriendschapsverzoek! 👋",
+    "pushInviteBody": "Iemand wil contact met je maken op Reconnect"
+  },
   "home": {
     "title": "Jouw vragen",
     "empty": "Nog geen vriendschappen — nodig iemand uit!"

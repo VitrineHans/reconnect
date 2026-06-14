@@ -33,6 +33,21 @@
     "usernameRules": "Use 3–20 characters: letters, numbers, underscores only.",
     "usernameTaken": "That username is already taken. Try another."
   },
+  "friends": {
+    "title": "Friends 👯",
+    "searchPlaceholder": "Search by username...",
+    "noUsersFound": "No users found",
+    "searchHint": "Search for friends by username",
+    "add": "Add",
+    "wantsToConnect": "@{{username}} wants to connect 👋",
+    "pendingInvites": "Pending invites",
+    "myFriends": "My Friends",
+    "noFriends": "No friends yet — search above to add someone 🙌",
+    "alreadySentTitle": "Already sent",
+    "alreadySentBody": "You already sent this person an invite.",
+    "pushInviteTitle": "New friend request! 👋",
+    "pushInviteBody": "Someone wants to connect with you on Reconnect"
+  },
   "home": {
     "title": "Your Questions",
     "empty": "No friendships yet — invite someone!"
