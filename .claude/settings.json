@@ -1,0 +1,42 @@
+{
+  "model": "claude-opus-4-8",
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "MultiEdit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "TodoWrite(*)",
+      "TodoRead(*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "export PATH=\"/opt/homebrew/bin:/opt/homebrew/opt/node/bin:$PATH\"; cd /Users/hanswagener/Projects/reconnect/mobile && npx eslint . 1>&2 || exit 2"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "export PATH=\"/opt/homebrew/bin:/opt/homebrew/opt/node/bin:$PATH\"; cd /Users/hanswagener/Projects/reconnect/mobile && ( npx tsc --noEmit && npx eslint . && npx jest --silent ) 1>&2 || exit 2"
+          }
+        ]
+      }
+    ]
+  }
+}
