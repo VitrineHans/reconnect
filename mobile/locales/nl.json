@@ -237,7 +237,18 @@
     "emptyFriends": "Voeg eerst vrienden toe om een groep te starten.",
     "create": "Groep aanmaken",
     "createFailed": "Kon groep niet aanmaken",
-    "full": "Groepen kunnen maximaal 8 leden hebben."
+    "full": "Groepen kunnen maximaal 8 leden hebben.",
+    "recordCta": "Neem je antwoord op",
+    "lockedHint": "Antwoord eerst om ieders antwoorden te ontgrendelen 👀",
+    "youLabel": "Jij",
+    "watchCta": "Bekijken",
+    "answeredTag": "geantwoord ✓",
+    "notAnsweredTag": "heeft nog niet geantwoord",
+    "waitingQuestion": "Wachten op de volgende vraag…",
+    "leave": "Groep verlaten",
+    "leaveConfirmTitle": "Groep verlaten?",
+    "leaveConfirmBody": "Je krijgt dan geen vragen meer van deze groep.",
+    "loadFailed": "Kon deze groep niet laden."
   },
   "tabs": {
     "home": "Start",

@@ -237,7 +237,18 @@
     "emptyFriends": "Add friends first to start a group.",
     "create": "Create group",
     "createFailed": "Couldn't create group",
-    "full": "Groups can have up to 8 members."
+    "full": "Groups can have up to 8 members.",
+    "recordCta": "Record your answer",
+    "lockedHint": "Answer first to unlock everyone's answers 👀",
+    "youLabel": "You",
+    "watchCta": "Watch",
+    "answeredTag": "answered ✓",
+    "notAnsweredTag": "hasn't answered yet",
+    "waitingQuestion": "Waiting for the next question…",
+    "leave": "Leave group",
+    "leaveConfirmTitle": "Leave group?",
+    "leaveConfirmBody": "You'll stop getting this group's questions.",
+    "loadFailed": "Couldn't load this group."
   },
   "tabs": {
     "home": "Home",
