@@ -221,6 +221,24 @@
     "privacyBody": "Reconnect is gratis en draait om 1-op-1-vriendschappen. Je videoantwoorden zijn vluchtig — verwijderd nadat beide vrienden ze hebben bekeken, nooit gearchiveerd. We verkopen je persoonsgegevens nooit. Geaggregeerde, geanonimiseerde trends worden alleen gedeeld als je daarvoor kiest.",
     "termsBody": "Wees aardig: neem eerlijke antwoorden op, respecteer je vrienden en upload nooit iets illegaals of schadelijks. Reconnect wordt aangeboden 'as is' en is altijd gratis voor gebruikers. We kunnen deze voorwaarden bijwerken; door gebruik te blijven maken ga je akkoord met de wijzigingen."
   },
+  "group": {
+    "sectionTitle": "Groepen",
+    "newGroup": "+ Nieuwe groep",
+    "noGroups": "Nog geen groepen — start er een met je vrienden.",
+    "members": "{{count}} leden",
+    "cta": {
+      "record": "Antwoord opnemen",
+      "watch": "Antwoorden bekijken 👀",
+      "waiting": "Wachten…"
+    },
+    "createTitle": "Nieuwe groep",
+    "namePlaceholder": "Groepsnaam",
+    "pickFriends": "Vrienden toevoegen",
+    "emptyFriends": "Voeg eerst vrienden toe om een groep te starten.",
+    "create": "Groep aanmaken",
+    "createFailed": "Kon groep niet aanmaken",
+    "full": "Groepen kunnen maximaal 8 leden hebben."
+  },
   "tabs": {
     "home": "Start",
     "friends": "Vrienden",
