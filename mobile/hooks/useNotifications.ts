@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import i18n from '../lib/i18n';
+import { supabase } from '../lib/supabase';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -68,5 +69,54 @@ export async function sendExpoPushNotification(
     });
   } catch {
     // Push notification failure must never crash the app
+  }
+}
+
+/**
+ * Reveal push (REVEAL-02 / PUSH-04): once both friends have answered, notify the
+ * friend that their reveal is ready. Called by the second submitter's client
+ * after their response lands (see record.tsx). Resolves to true when a push was
+ * sent. Never throws — a failed reveal push must not break the submit flow.
+ *
+ * This is the client-side path. The robust server-side alternative
+ * (supabase/functions/notify-reveal) fires from a DB trigger regardless of
+ * client state; enable that — and drop this call — once it is deployed, to
+ * avoid double-notifying.
+ */
+export async function notifyFriendOfReveal(
+  friendshipId: string,
+  currentUserId: string,
+): Promise<boolean> {
+  try {
+    const { data: friendship } = await supabase
+      .from('friendships')
+      .select('user_a, user_b')
+      .eq('id', friendshipId)
+      .single();
+    if (!friendship) return false;
+
+    const friendId =
+      friendship.user_a === currentUserId ? friendship.user_b : friendship.user_a;
+
+    const { data: friendProfile } = await supabase
+      .from('profiles')
+      .select('push_token')
+      .eq('id', friendId)
+      .single();
+
+    const pushToken = (friendProfile as { push_token?: string } | null)?.push_token;
+    if (!pushToken) return false;
+
+    // Sent in the sender's language; localize to the recipient's stored locale
+    // once profiles persist a language preference.
+    await sendExpoPushNotification(
+      pushToken,
+      i18n.t('flow.pushRevealTitle'),
+      i18n.t('flow.pushRevealBody'),
+      { friendshipId, screen: 'reveal' },
+    );
+    return true;
+  } catch {
+    return false;
   }
 }

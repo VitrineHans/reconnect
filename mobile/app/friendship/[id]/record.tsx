@@ -8,7 +8,7 @@ import { useVideoUpload } from '../../../hooks/useVideoUpload';
 import { useSession } from '../../../hooks/useSession';
 import { supabase } from '../../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../../theme/tokens';
-import { sendExpoPushNotification } from '../../../hooks/useNotifications';
+import { notifyFriendOfReveal } from '../../../hooks/useNotifications';
 
 export default function RecordScreen() {
   const { t } = useTranslation();
@@ -63,33 +63,9 @@ export default function RecordScreen() {
 
     const friendAlreadyAnswered = (responses ?? []).some((r: { user_id: string }) => r.user_id !== userId);
 
+    // This is the second submission → both have answered → tell the friend.
     if (friendAlreadyAnswered) {
-      // Send reveal-ready push notification to the friend
-      const { data: friendship } = await supabase
-        .from('friendships')
-        .select('user_a, user_b')
-        .eq('id', friendshipId)
-        .single();
-
-      if (friendship) {
-        const friendId = friendship.user_a === userId ? friendship.user_b : friendship.user_a;
-        const { data: friendProfile } = await supabase
-          .from('profiles')
-          .select('push_token')
-          .eq('id', friendId)
-          .single();
-
-        if (friendProfile?.push_token) {
-          // NOTE: sent in the sender's language; localize to the recipient's
-          // stored locale once profiles persist a language preference.
-          await sendExpoPushNotification(
-            friendProfile.push_token,
-            t('flow.pushRevealTitle'),
-            t('flow.pushRevealBody'),
-            { friendshipId, screen: 'reveal' },
-          );
-        }
-      }
+      await notifyFriendOfReveal(friendshipId, userId);
     }
   }
 

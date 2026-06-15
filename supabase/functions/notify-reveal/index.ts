@@ -1,6 +1,14 @@
-// TODO Phase 3: wire to DB trigger on both-submitted event
-// This Edge Function is a stub — it will be triggered by a PostgreSQL function
-// when both friends have submitted their question_responses for a given friendship.
+// Server-side reveal push (the robust alternative to the client-side path).
+//
+// Today the reveal push is sent client-side by the second submitter
+// (notifyFriendOfReveal in mobile/hooks/useNotifications.ts), which needs no
+// deploy and works offline-of-server. This Edge Function is the production-grade
+// path: a DB trigger on the both-submitted event would invoke it (via pg_net)
+// so the push fires regardless of client state.
+//
+// NOT YET ACTIVE — it has no trigger wiring. Before enabling it: deploy this
+// function, add the DB trigger + pg_net call, and REMOVE the client-side
+// notifyFriendOfReveal call so friends aren't notified twice.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 

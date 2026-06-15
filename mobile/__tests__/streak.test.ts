@@ -8,6 +8,10 @@ jest.mock('expo-notifications', () => ({
   SchedulableTriggerInputTypes: { DATE: 'date' },
 }));
 
+// useNotifications now imports lib/supabase (for notifyFriendOfReveal); mock it
+// so the real client (which needs env vars) isn't constructed in the test env.
+jest.mock('../lib/supabase', () => ({ supabase: {} }));
+
 const mockFetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
 (global as unknown as Record<string, unknown>).fetch = mockFetch;
 
