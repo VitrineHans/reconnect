@@ -4,9 +4,11 @@
 import {
   normalizePrefs,
   pairConstraints,
+  combineConstraints,
   eligibleQuestions,
   rankQuestions,
   selectQuestion,
+  selectGroupQuestion,
   DEFAULT_DEPTH_COMFORT,
   type OnboardingPrefs,
   type TaggedQuestion,
@@ -149,5 +151,61 @@ describe('selectQuestion', () => {
     const last = selectQuestion(flat, prefs(), prefs(), [], () => 0.99);
     expect(first?.id).toBe('a');
     expect(last?.id).toBe('c');
+  });
+});
+
+describe('combineConstraints (N members)', () => {
+  it('unions off-limits + interests and takes the lowest depth across members', () => {
+    const c = combineConstraints([
+      prefs({ offLimits: ['money'], interests: ['food'], depthComfort: 5 }),
+      prefs({ offLimits: ['health'], interests: ['travel'], depthComfort: 2 }),
+      prefs({ offLimits: ['money'], interests: ['music'], depthComfort: 4 }),
+    ]);
+    expect([...c.offLimitTopics].sort()).toEqual(['health', 'money']);
+    expect([...c.interestTopics].sort()).toEqual(['food', 'music', 'travel']);
+    expect(c.depthCap).toBe(2);
+  });
+
+  it('falls back to the default depth for an empty member list', () => {
+    expect(combineConstraints([]).depthCap).toBe(DEFAULT_DEPTH_COMFORT);
+  });
+});
+
+describe('selectGroupQuestion', () => {
+  const pool = [
+    q('a', [], 1),
+    q('b', ['money'], 1),
+    q('c', ['food'], 2),
+    q('d', ['health'], 5),
+  ];
+
+  it("excludes any member's off-limit topic (union) and never serves it", () => {
+    const members = [
+      prefs({ offLimits: ['money'] }),
+      prefs({ offLimits: ['health'] }),
+    ];
+    for (let i = 0; i < 50; i++) {
+      const chosen = selectGroupQuestion(pool, members, [], Math.random);
+      expect(chosen).not.toBeNull();
+      expect(chosen?.topics.some((t) => t === 'money' || t === 'health')).toBe(false);
+    }
+  });
+
+  it('caps depth at the most conservative member', () => {
+    const members = [prefs({ depthComfort: 2 }), prefs({ depthComfort: 5 }), prefs({ depthComfort: 4 })];
+    // only a(1) and b(1)/c(2) within cap 2; with no off-limits all are safe
+    const chosen = selectGroupQuestion(pool, members, [], () => 0);
+    expect(chosen?.depth).toBeLessThanOrEqual(2);
+  });
+
+  it('boosts a question matching the union of interests', () => {
+    const members = [prefs({ interests: ['food'] }), prefs({ interests: ['music'] })];
+    const chosen = selectGroupQuestion(pool, members, [], () => 0);
+    expect(chosen?.id).toBe('c'); // only 'c' (food) overlaps the interest union
+  });
+
+  it('returns null when every question is answered', () => {
+    const members = [prefs(), prefs()];
+    expect(selectGroupQuestion(pool, members, ['a', 'b', 'c', 'd'])).toBeNull();
   });
 });

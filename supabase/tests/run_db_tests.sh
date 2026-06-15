@@ -41,11 +41,23 @@ pg_ctl -D "$PGDATA" -o "-p $PORT -k $SOCK -c listen_addresses=''" -l "$PGDATA/se
 PSQL=(psql -v ON_ERROR_STOP=1 -h "$SOCK" -p "$PORT" -U postgres)
 "${PSQL[@]}" -d postgres -c "CREATE DATABASE reconnect_test;" >/dev/null
 
+# Stub pg_cron (a Supabase extension) so the group-rotation migration's
+# cron.schedule calls are no-ops in this throwaway cluster.
+"${PSQL[@]}" -q -d reconnect_test -c "
+  create schema if not exists cron;
+  create table if not exists cron.job (jobname text);
+  create or replace function cron.schedule(text, text, text) returns bigint language sql as \$\$ select 1::bigint \$\$;
+  create or replace function cron.unschedule(text) returns boolean language sql as \$\$ select true \$\$;
+"
+
 "${PSQL[@]}" -q -d reconnect_test \
   -f "$SCRIPT_DIR/schema_min.sql" \
+  -f "$SCRIPT_DIR/group_schema_min.sql" \
   -f "$MIGRATIONS/20260615000000_phase2_personalization.sql" \
   -f "$SEEDS/questions.sql" \
   -f "$MIGRATIONS/20260615000001_phase2_rotate_personalized.sql" \
-  -f "$SCRIPT_DIR/rotate_personalization.test.sql"
+  -f "$MIGRATIONS/20260615000004_phase5_group_rotation.sql" \
+  -f "$SCRIPT_DIR/rotate_personalization.test.sql" \
+  -f "$SCRIPT_DIR/rotate_group.test.sql"
 
-echo "rotate_daily_questions() DB test: PASS"
+echo "rotate_daily_questions() + rotate_group_questions() DB tests: PASS"

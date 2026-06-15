@@ -76,13 +76,31 @@ export interface PairConstraints {
   depthCap: number;
 }
 
-/** Combine two friends' prefs into the constraints that govern selection. */
-export function pairConstraints(a: OnboardingPrefs, b: OnboardingPrefs): PairConstraints {
+/**
+ * Combine N members' prefs into the constraints that govern selection: the
+ * UNION of off-limit topics (never serve any), the UNION of interests (boost),
+ * and the lowest (most conservative) depth comfort. Works for a 1:1 pair or a
+ * whole group.
+ */
+export function combineConstraints(prefs: OnboardingPrefs[]): PairConstraints {
+  const offLimitTopics = new Set<string>();
+  const interestTopics = new Set<string>();
+  let depthCap = MAX_DEPTH;
+  for (const p of prefs) {
+    p.offLimits.forEach((t) => offLimitTopics.add(t));
+    p.interests.forEach((t) => interestTopics.add(t));
+    depthCap = Math.min(depthCap, p.depthComfort);
+  }
   return {
-    offLimitTopics: new Set([...a.offLimits, ...b.offLimits]),
-    interestTopics: new Set([...a.interests, ...b.interests]),
-    depthCap: Math.min(a.depthComfort, b.depthComfort),
+    offLimitTopics,
+    interestTopics,
+    depthCap: prefs.length === 0 ? DEFAULT_DEPTH_COMFORT : depthCap,
   };
+}
+
+/** Combine two friends' prefs — the 1:1 case of combineConstraints. */
+export function pairConstraints(a: OnboardingPrefs, b: OnboardingPrefs): PairConstraints {
+  return combineConstraints([a, b]);
 }
 
 function hasOverlap(topics: string[], set: Set<string>): boolean {
@@ -110,18 +128,13 @@ export function eligibleQuestions(
   return withinDepth.length > 0 ? withinDepth : safe;
 }
 
-/**
- * Eligible questions ordered best-first: by interest overlap (desc), then by id
- * (asc) for a stable, deterministic order that tests can assert against.
- */
-export function rankQuestions(
+/** Eligible questions best-first: interest overlap (desc), then id (asc). */
+function rankByConstraints(
   candidates: TaggedQuestion[],
-  a: OnboardingPrefs,
-  b: OnboardingPrefs,
-  answeredIds: Iterable<string> = [],
+  constraints: PairConstraints,
+  answeredIds: ReadonlySet<string>,
 ): TaggedQuestion[] {
-  const constraints = pairConstraints(a, b);
-  const eligible = eligibleQuestions(candidates, constraints, new Set(answeredIds));
+  const eligible = eligibleQuestions(candidates, constraints, answeredIds);
   return [...eligible].sort((x, y) => {
     const byScore =
       interestScore(y.topics, constraints.interestTopics) -
@@ -131,11 +144,32 @@ export function rankQuestions(
   });
 }
 
-/**
- * Pick one question for the pair: a random choice among the highest-scoring
- * tier (so equally-good questions all get a turn over time). Returns null only
- * when there is nothing safe left to ask. `rng` is injectable for tests.
- */
+/** Random pick among the highest-scoring tier; null when nothing is eligible. */
+function selectByConstraints(
+  candidates: TaggedQuestion[],
+  constraints: PairConstraints,
+  answeredIds: ReadonlySet<string>,
+  rng: () => number,
+): TaggedQuestion | null {
+  const ranked = rankByConstraints(candidates, constraints, answeredIds);
+  if (ranked.length === 0) return null;
+  const topScore = interestScore(ranked[0].topics, constraints.interestTopics);
+  const topTier = ranked.filter((q) => interestScore(q.topics, constraints.interestTopics) === topScore);
+  const idx = Math.min(Math.floor(rng() * topTier.length), topTier.length - 1);
+  return topTier[idx];
+}
+
+/** 1:1 ranking — eligible questions best-first for two friends. */
+export function rankQuestions(
+  candidates: TaggedQuestion[],
+  a: OnboardingPrefs,
+  b: OnboardingPrefs,
+  answeredIds: Iterable<string> = [],
+): TaggedQuestion[] {
+  return rankByConstraints(candidates, pairConstraints(a, b), new Set(answeredIds));
+}
+
+/** 1:1 selection — one question for the pair (null if nothing safe is left). */
 export function selectQuestion(
   candidates: TaggedQuestion[],
   a: OnboardingPrefs,
@@ -143,13 +177,24 @@ export function selectQuestion(
   answeredIds: Iterable<string> = [],
   rng: () => number = Math.random,
 ): TaggedQuestion | null {
-  const ranked = rankQuestions(candidates, a, b, answeredIds);
-  if (ranked.length === 0) return null;
+  return selectByConstraints(candidates, pairConstraints(a, b), new Set(answeredIds), rng);
+}
 
-  const { interestTopics } = pairConstraints(a, b);
-  const topScore = interestScore(ranked[0].topics, interestTopics);
-  const topTier = ranked.filter((q) => interestScore(q.topics, interestTopics) === topScore);
+/** Group ranking — eligible questions best-first across N members. */
+export function rankGroupQuestions(
+  candidates: TaggedQuestion[],
+  prefs: OnboardingPrefs[],
+  answeredIds: Iterable<string> = [],
+): TaggedQuestion[] {
+  return rankByConstraints(candidates, combineConstraints(prefs), new Set(answeredIds));
+}
 
-  const idx = Math.min(Math.floor(rng() * topTier.length), topTier.length - 1);
-  return topTier[idx];
+/** Group selection — one question for the whole group (null if nothing safe). */
+export function selectGroupQuestion(
+  candidates: TaggedQuestion[],
+  prefs: OnboardingPrefs[],
+  answeredIds: Iterable<string> = [],
+  rng: () => number = Math.random,
+): TaggedQuestion | null {
+  return selectByConstraints(candidates, combineConstraints(prefs), new Set(answeredIds), rng);
 }
