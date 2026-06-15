@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSession } from '../../../hooks/useSession';
 import { leaveGroup } from '../../../hooks/useGroups';
 import { supabase } from '../../../lib/supabase';
+import { localizedQuestionText } from '../../../lib/questionText';
 import { colors, typography, spacing, radius, shadows } from '../../../theme/tokens';
 
 interface Member { id: string; username: string; display_name: string | null }
@@ -20,7 +21,7 @@ interface HubData {
 async function loadHub(groupId: string, userId: string): Promise<HubData> {
   const { data: group, error } = await supabase
     .from('groups')
-    .select('name, current_question_id, questions!current_question_id ( text )')
+    .select('name, current_question_id, questions!current_question_id ( text, text_i18n )')
     .eq('id', groupId)
     .single();
   if (error || !group) throw new Error(error?.message ?? 'not found');
@@ -28,7 +29,7 @@ async function loadHub(groupId: string, userId: string): Promise<HubData> {
   const row = group as unknown as {
     name: string;
     current_question_id: string | null;
-    questions: { text: string } | null;
+    questions: { text: string; text_i18n: Record<string, string> | null } | null;
   };
 
   const { data: memberRows } = await supabase
@@ -52,7 +53,7 @@ async function loadHub(groupId: string, userId: string): Promise<HubData> {
 
   return {
     name: row.name,
-    questionText: row.questions?.text ?? null,
+    questionText: row.questions ? localizedQuestionText(row.questions.text, row.questions.text_i18n) : null,
     currentQuestionId,
     members,
     answeredIds,

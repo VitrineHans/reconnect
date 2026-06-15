@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { localizedQuestionText } from '../lib/questionText';
 
 export const MAX_GROUP_MEMBERS = 8;
 
@@ -106,7 +107,7 @@ interface RawGroup {
   name: string;
   created_by: string;
   current_question_id: string | null;
-  questions: { text: string } | null;
+  questions: { text: string; text_i18n: Record<string, string> | null } | null;
 }
 
 async function buildGroupState(raw: RawGroup, userId: string): Promise<GroupWithState> {
@@ -138,7 +139,7 @@ async function buildGroupState(raw: RawGroup, userId: string): Promise<GroupWith
     name: raw.name,
     createdBy: raw.created_by,
     members,
-    questionText: raw.questions?.text ?? null,
+    questionText: raw.questions ? localizedQuestionText(raw.questions.text, raw.questions.text_i18n) : null,
     currentQuestionId: raw.current_question_id,
     iAnswered,
     othersAnswered,
@@ -149,7 +150,7 @@ async function buildGroupState(raw: RawGroup, userId: string): Promise<GroupWith
 async function fetchGroupsWithState(userId: string): Promise<GroupWithState[]> {
   const { data, error } = await supabase
     .from('group_members')
-    .select('groups!inner ( id, name, created_by, current_question_id, questions!current_question_id ( text ) )')
+    .select('groups!inner ( id, name, created_by, current_question_id, questions!current_question_id ( text, text_i18n ) )')
     .eq('user_id', userId);
   if (error) throw new Error(error.message);
 

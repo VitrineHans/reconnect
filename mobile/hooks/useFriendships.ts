@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { localizedQuestionText } from '../lib/questionText';
 
 export type FriendshipState = 'reveal_ready' | 'your_turn' | 'waiting';
 
@@ -41,7 +42,7 @@ interface RawFriendship {
   user_a: string;
   user_b: string;
   current_question_id: string | null;
-  questions: { text: string } | null;
+  questions: { text: string; text_i18n: Record<string, string> | null } | null;
   question_responses: RawResponse[];
 }
 
@@ -54,7 +55,7 @@ async function fetchFriendshipsWithState(userId: string): Promise<FriendshipWith
       user_a,
       user_b,
       current_question_id,
-      questions!current_question_id ( text ),
+      questions!current_question_id ( text, text_i18n ),
       question_responses ( id, user_id, question_id, watched_at, expires_at )
     `)
     .or(`user_a.eq.${userId},user_b.eq.${userId}`);
@@ -137,7 +138,7 @@ function buildFriendshipWithState(
     friendId,
     friendProfile: profileMap.get(friendId) ?? fallbackProfile,
     streakCount: f.streak_count,
-    questionText: f.questions?.text ?? null,
+    questionText: f.questions ? localizedQuestionText(f.questions.text, f.questions.text_i18n) : null,
     state,
     expiresAt: myResponse?.expires_at ?? null,
     myResponseId: myResponse?.id ?? null,

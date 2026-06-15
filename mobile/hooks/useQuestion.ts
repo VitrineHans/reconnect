@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { localizedQuestionText } from '../lib/questionText';
 
 export interface Question {
   id: string;
@@ -28,7 +29,7 @@ async function fetchCurrentQuestion(friendshipId: string): Promise<Question | nu
   // Step 2: fetch the question directly by ID
   const { data: question, error: qError } = await supabase
     .from('questions')
-    .select('id, text, category')
+    .select('id, text, category, text_i18n')
     .eq('id', friendship.current_question_id)
     .single();
 
@@ -37,7 +38,7 @@ async function fetchCurrentQuestion(friendshipId: string): Promise<Question | nu
 
   return {
     id: question.id,
-    text: question.text,
+    text: localizedQuestionText(question.text, question.text_i18n as Record<string, string> | null),
     category: question.category as Question['category'],
   };
 }
