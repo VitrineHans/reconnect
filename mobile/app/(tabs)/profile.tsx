@@ -52,11 +52,6 @@ export default function ProfileScreen() {
     refetch();
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    // auth guard redirects to /(auth)/login automatically
-  };
-
   if (profileLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -103,12 +98,8 @@ export default function ProfileScreen() {
           : <Text style={styles.buttonText}>{t('profile.save')}</Text>}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.prefsButton} onPress={() => router.push('/(onboarding)/questionnaire')}>
-        <Text style={styles.prefsButtonText}>{t('profile.editPreferences')}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-        <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
+      <TouchableOpacity style={styles.prefsButton} onPress={() => router.push('/settings')}>
+        <Text style={styles.prefsButtonText}>{t('profile.openSettings')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

@@ -192,12 +192,19 @@
     "signOut": "Uitloggen",
     "invalidTitle": "Ongeldig",
     "invalidDisplayName": "Weergavenaam moet 1–50 tekens zijn.",
-    "uploadFailed": "Uploaden mislukt"
+    "uploadFailed": "Uploaden mislukt",
+    "openSettings": "⚙️ Instellingen"
   },
   "settings": {
     "title": "Instellingen",
     "language": "Taal",
-    "languageSubtitle": "Kies je taal"
+    "languageSubtitle": "Kies je taal",
+    "account": "Account",
+    "editPreferences": "Je antwoorden bewerken",
+    "editPreferencesSubtitle": "Interesses & comfort bijwerken",
+    "signOut": "Uitloggen",
+    "signOutConfirmTitle": "Uitloggen?",
+    "signOutConfirmBody": "Je moet opnieuw inloggen."
   },
   "tabs": {
     "home": "Start",

@@ -192,12 +192,19 @@
     "signOut": "Sign out",
     "invalidTitle": "Invalid",
     "invalidDisplayName": "Display name must be 1–50 characters.",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "openSettings": "⚙️ Settings"
   },
   "settings": {
     "title": "Settings",
     "language": "Language",
-    "languageSubtitle": "Choose your language"
+    "languageSubtitle": "Choose your language",
+    "account": "Account",
+    "editPreferences": "Edit your answers",
+    "editPreferencesSubtitle": "Update interests & comfort",
+    "signOut": "Sign out",
+    "signOutConfirmTitle": "Sign out?",
+    "signOutConfirmBody": "You'll need to log in again."
   },
   "tabs": {
     "home": "Home",
