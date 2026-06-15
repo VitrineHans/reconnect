@@ -46,7 +46,12 @@
     "alreadySentTitle": "Al verstuurd",
     "alreadySentBody": "Je hebt deze persoon al een uitnodiging gestuurd.",
     "pushInviteTitle": "Nieuw vriendschapsverzoek! 👋",
-    "pushInviteBody": "Iemand wil contact met je maken op Reconnect"
+    "pushInviteBody": "Iemand wil contact met je maken op Reconnect",
+    "removeHint": "Tip: houd een vriend ingedrukt om te verwijderen.",
+    "remove": "Verwijderen",
+    "removeConfirmTitle": "Vriend verwijderen?",
+    "removeConfirmBody": "Dit beëindigt je vriendschap met {{name}} en reset je streak. Je kunt later opnieuw verbinden.",
+    "removeFailed": "Kon vriend niet verwijderen"
   },
   "flow": {
     "noQuestionYet": "Nog geen vraag beschikbaar. Kom snel terug!",

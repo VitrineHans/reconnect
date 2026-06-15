@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
 import { sendExpoPushNotification } from '../../hooks/useNotifications';
+import { removeFriendship } from '../../hooks/useFriendships';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -112,7 +113,18 @@ function useFriendsData(userId: string | undefined) {
     await fetchAll();
   };
 
-  return { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite };
+  const removeFriend = async (friendshipId: string, friendId: string) => {
+    if (!userId) return;
+    try {
+      await removeFriendship(friendshipId, friendId, userId);
+    } catch (e) {
+      Alert.alert(t('friends.removeFailed'), e instanceof Error ? e.message : '');
+      return;
+    }
+    await fetchAll();
+  };
+
+  return { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite, removeFriend };
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
@@ -152,9 +164,9 @@ function InviteCard({ invite, onAccept, onDecline }: { invite: FriendInvite; onA
   );
 }
 
-function FriendCard({ friendship }: { friendship: Friendship }) {
+function FriendCard({ friendship, onLongPress }: { friendship: Friendship; onLongPress: () => void }) {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onLongPress={onLongPress} delayLongPress={350} activeOpacity={0.7}>
       <View style={styles.cardInfo}>
         <Text style={styles.cardName}>{friendship.other_user.display_name ?? friendship.other_user.username}</Text>
         <Text style={styles.cardSub}>@{friendship.other_user.username}</Text>
@@ -164,7 +176,7 @@ function FriendCard({ friendship }: { friendship: Friendship }) {
           <Text style={styles.streakText}>🔥 {friendship.streak_count}</Text>
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -174,7 +186,19 @@ export default function FriendsScreen() {
   const { t } = useTranslation();
   const { session } = useSession();
   const userId = session?.user?.id;
-  const { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite } = useFriendsData(userId);
+  const { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite, removeFriend } = useFriendsData(userId);
+
+  const confirmRemove = (f: Friendship) => {
+    const name = f.other_user.display_name ?? f.other_user.username;
+    Alert.alert(
+      t('friends.removeConfirmTitle'),
+      t('friends.removeConfirmBody', { name }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('friends.remove'), style: 'destructive', onPress: () => removeFriend(f.id, f.other_user.id) },
+      ],
+    );
+  };
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
@@ -219,8 +243,11 @@ export default function FriendsScreen() {
       {!loading && friendships.length === 0 && (
         <Text style={styles.emptyHint}>{t('friends.noFriends')}</Text>
       )}
+      {friendships.length > 0 && (
+        <Text style={styles.emptyHint}>{t('friends.removeHint')}</Text>
+      )}
       {friendships.map(f => (
-        <FriendCard key={f.id} friendship={f} />
+        <FriendCard key={f.id} friendship={f} onLongPress={() => confirmRemove(f)} />
       ))}
     </ScrollView>
   );

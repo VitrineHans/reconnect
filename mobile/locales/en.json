@@ -46,7 +46,12 @@
     "alreadySentTitle": "Already sent",
     "alreadySentBody": "You already sent this person an invite.",
     "pushInviteTitle": "New friend request! 👋",
-    "pushInviteBody": "Someone wants to connect with you on Reconnect"
+    "pushInviteBody": "Someone wants to connect with you on Reconnect",
+    "removeHint": "Tip: long-press a friend to remove them.",
+    "remove": "Remove",
+    "removeConfirmTitle": "Remove friend?",
+    "removeConfirmBody": "This ends your friendship with {{name}} and resets your streak. You can reconnect later.",
+    "removeFailed": "Couldn't remove friend"
   },
   "flow": {
     "noQuestionYet": "No question available yet. Check back soon!",

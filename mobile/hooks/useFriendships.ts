@@ -145,6 +145,22 @@ function buildFriendshipWithState(
   };
 }
 
+/**
+ * End a friendship. Deleting the row cascades its question_responses (FK ON
+ * DELETE CASCADE), so the streak and active question are cleared with it. Also
+ * clears any invite this user previously sent the friend, so they can reconnect
+ * later without hitting the unique-invite constraint.
+ */
+export async function removeFriendship(
+  friendshipId: string,
+  friendId: string,
+  userId: string,
+): Promise<void> {
+  const { error } = await supabase.from('friendships').delete().eq('id', friendshipId);
+  if (error) throw new Error(error.message);
+  await supabase.from('friend_invites').delete().eq('from_user', userId).eq('to_user', friendId);
+}
+
 export interface UseFriendshipsResult {
   friendships: FriendshipWithState[];
   loading: boolean;
