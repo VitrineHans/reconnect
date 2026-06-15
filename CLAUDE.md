@@ -11,29 +11,30 @@ Each friendship gets one question per day. Both friends record short video answe
 
 ---
 
-## Current Status (as of 2026-04-04)
+## Current Status (as of 2026-06-15)
 
-**Phase: Pre-development. GSD planning complete. Ready to start Phase 1.**
+**Phases 1–3 complete + an enhancement track (i18n → personalization → reveal push → settings/legal/unfriend → Groups → notification prefs). Monetization (orig. Phase 4) not started.**
 
-What exists:
-- Expo Router navigation shell with auth guard
-- Supabase schema (6 tables, RLS on all)
-- `useSession` hook, Supabase client singleton
-- All screens are **placeholders only** — no real features implemented
+Built & working (iOS simulator-verified):
+- Auth/OTP, onboarding, profiles, avatar upload, friend invite/search
+- Core loop: question engine, video record/upload, reveal mechanic
+- Streaks (24h window via pg_cron) + streak-risk notification
+- i18n (EN/NL full, ES/DE/FR fallback, in-app language switch); personalized question rotation (off-limits/depth/interests) — DB-verified
+- Settings, Privacy/Terms, unfriend, notification on/off toggle
+- **Groups** (small groups ≤8): schema/RLS, group rotation, progressive answer-to-unlock reveal, full UI
 
-What needs building (4 phases):
-- **Phase 1** — Auth UI, profiles, friend invite system
-- **Phase 2** — Video loop, question engine, reveal mechanic, design system
-- **Phase 3** — Streak engine (24h window), push notifications
-- **Phase 4** — Sponsored question packs, friendship gifts
+Still to do:
+- **Monetization** — sponsored question packs, friendship gifts, Wrapped (orig. Phase 4)
+- **E2E tests** (Playwright)
+- **Verification** — RLS against a real Supabase instance; real-device + push (EAS `preview` build)
 
-Run `/gsd-plan-phase 1` to start Phase 1 execution.
+> Detailed state: `.planning/STATE.md`
 
 ---
 
 ## Product Principles
 
-- **Intimacy over scale** — 1:1 only in v1, no groups
+- **Intimacy over scale** — 1:1 first; small opt-in groups (≤8) added in v1 with progressive answer-to-unlock reveal and no group streaks. No large/public communities.
 - **Free forever** — users never pay; no subscriptions, no paywalls, ever
 - **Ephemeral** — videos deleted after watching; no archive
 - **Authentic** — low friction, no editing, no perfectionism
@@ -78,17 +79,18 @@ No separate backend API server — mobile talks directly to Supabase via RLS.
 
 ---
 
-## Database Schema (Confirmed)
+## Database Schema
 
-Tables in `supabase/migrations/20260404000000_init.sql`:
-- `profiles` — extends auth.users; username, display_name, avatar_url
-- `questions` — text, category (funny/deep/personal); **needs**: `is_sponsored`, `brand_id`
-- `friendships` — user_a, user_b (user_a < user_b), streak_count; **needs**: `current_question_id`
+Tables (`supabase/migrations/`):
+- `profiles` — username, display_name, avatar_url, `push_token`, `onboarding_answers` (jsonb)
+- `questions` — text, category (funny/deep/personal), `topics[]`, `depth` (1–5). **Monetization still needs**: `is_sponsored`, `brand_id`
+- `friendships` — user_a, user_b (user_a < user_b), streak_count, `current_question_id`, `window_opened_at`
 - `friend_invites` — from/to user, status (pending/accepted/declined)
-- `question_responses` — friendship_id, question_id, user_id, video_url, watched_at; **needs**: `expires_at`
+- `question_responses` — `friendship_id` **xor** `group_id`, question_id, user_id, video_url, watched_at, `expires_at`
 - `question_ratings` — user_id, question_id, rating (-1/1)
+- `groups` / `group_members` — Phase 5 (additive; 1:1 path untouched)
 
-RLS enabled on all tables. Missing fields noted above need migration in Phase 1/2.
+RLS enabled on all tables. Server functions: `rotate_daily_questions()`, `rotate_group_questions()`, streak trigger + `reset_expired_streaks()` (pg_cron). RLS is unverified locally — verify against a real Supabase instance.
 
 ---
 
@@ -166,7 +168,7 @@ Installed skills: `frontend-design`, `browser-use` (in `.claude/skills/`)
 | Secret until both answer | Drives completion; reveal is the dopamine hit |
 | Free forever, brand monetization | No paywall friction; sponsored packs feel like content |
 | No separate backend | Supabase handles everything; simpler architecture |
-| 1:1 only in v1 | Validate core loop before adding group complexity |
+| 1:1 first; small groups (≤8) added in v1 | Validated the 1:1 loop first, then added opt-in groups (brainstormed): progressive answer-to-unlock reveal, no group streaks, additive tables |
 | Max video length: 30s | Decided in requirements (was open question) |
 | Users can re-record before submitting | Yes — confirmed in requirements |
 
