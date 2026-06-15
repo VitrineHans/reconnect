@@ -4,9 +4,11 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { getNotificationsEnabled } from '../lib/notificationPrefs';
 
-async function registerForPushNotificationsAsync(): Promise<string | null> {
+export async function registerForPushNotifications(): Promise<string | null> {
   if (!Device.isDevice) return null; // simulators cannot receive push
+  if (!(await getNotificationsEnabled())) return null; // user turned notifications off
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -33,7 +35,7 @@ export function usePushToken(session: Session | null): void {
     if (!session?.user?.id || registered.current) return;
     registered.current = true;
 
-    registerForPushNotificationsAsync()
+    registerForPushNotifications()
       .then(async (token) => {
         if (!token) return;
         await supabase

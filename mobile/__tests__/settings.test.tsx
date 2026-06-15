@@ -9,6 +9,13 @@ jest.mock('expo-router', () => ({
 jest.mock('../lib/supabase', () => ({
   supabase: { auth: { signOut: jest.fn() } },
 }));
+jest.mock('../hooks/useSession', () => ({ useSession: () => ({ session: null }) }));
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  scheduleNotificationAsync: jest.fn(),
+  cancelScheduledNotificationAsync: jest.fn(),
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+}));
 
 import SettingsScreen from '../app/settings';
 import i18n, { setLanguage } from '../lib/i18n';

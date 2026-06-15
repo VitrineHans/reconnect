@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import i18n, {
@@ -7,12 +8,28 @@ import i18n, {
   setLanguage,
 } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
+import { useSession } from '../hooks/useSession';
+import { getNotificationsEnabled, setNotificationsEnabled } from '../lib/notificationPrefs';
+import { applyNotificationPreference } from '../hooks/useNotifications';
 import { colors, typography, spacing, radius } from '../theme/tokens';
 
 export default function SettingsScreen() {
   const { t, i18n: i18nInstance } = useTranslation();
   const router = useRouter();
+  const { session } = useSession();
   const current = i18nInstance.language;
+
+  const [notifEnabled, setNotifEnabled] = useState(true);
+  useEffect(() => { getNotificationsEnabled().then(setNotifEnabled); }, []);
+
+  const toggleNotifications = async (value: boolean) => {
+    setNotifEnabled(value);
+    await setNotificationsEnabled(value);
+    const uid = session?.user?.id;
+    if (uid) {
+      try { await applyNotificationPreference(uid, value); } catch { /* non-critical */ }
+    }
+  };
 
   const confirmSignOut = () => {
     Alert.alert(t('settings.signOutConfirmTitle'), t('settings.signOutConfirmBody'), [
@@ -68,6 +85,19 @@ export default function SettingsScreen() {
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Notifications */}
+        <Text style={styles.sectionLabel}>{t('settings.notifications')}</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Text style={[styles.rowLabel, styles.rowTextGroup]}>{t('settings.notificationsSubtitle')}</Text>
+            <Switch
+              value={notifEnabled}
+              onValueChange={toggleNotifications}
+              trackColor={{ true: colors.ember, false: colors.stroke }}
+            />
+          </View>
         </View>
 
         {/* Legal */}

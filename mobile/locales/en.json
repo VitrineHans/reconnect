@@ -210,6 +210,8 @@
     "signOut": "Sign out",
     "signOutConfirmTitle": "Sign out?",
     "signOutConfirmBody": "You'll need to log in again.",
+    "notifications": "Notifications",
+    "notificationsSubtitle": "Reveals, streak reminders & invites",
     "legal": "Legal",
     "privacyPolicy": "Privacy Policy",
     "terms": "Terms of Service"
