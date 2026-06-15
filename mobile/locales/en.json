@@ -204,7 +204,17 @@
     "editPreferencesSubtitle": "Update interests & comfort",
     "signOut": "Sign out",
     "signOutConfirmTitle": "Sign out?",
-    "signOutConfirmBody": "You'll need to log in again."
+    "signOutConfirmBody": "You'll need to log in again.",
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "legal": {
+    "privacyTitle": "Privacy Policy",
+    "termsTitle": "Terms of Service",
+    "draftNotice": "Placeholder — replace with your reviewed policy before launch.",
+    "privacyBody": "Reconnect is free and built around 1:1 friendships. Your video answers are ephemeral — deleted after both friends watch them, never archived. We never sell your personal data. Aggregated, anonymized trends are shared only if you opt in.",
+    "termsBody": "Be kind: record honest answers, respect your friends, and never upload anything illegal or harmful. Reconnect is provided as-is and is always free for users. We may update these terms; continued use means you accept the changes."
   },
   "tabs": {
     "home": "Home",

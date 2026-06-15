@@ -204,7 +204,17 @@
     "editPreferencesSubtitle": "Interesses & comfort bijwerken",
     "signOut": "Uitloggen",
     "signOutConfirmTitle": "Uitloggen?",
-    "signOutConfirmBody": "Je moet opnieuw inloggen."
+    "signOutConfirmBody": "Je moet opnieuw inloggen.",
+    "legal": "Juridisch",
+    "privacyPolicy": "Privacybeleid",
+    "terms": "Servicevoorwaarden"
+  },
+  "legal": {
+    "privacyTitle": "Privacybeleid",
+    "termsTitle": "Servicevoorwaarden",
+    "draftNotice": "Voorbeeldtekst — vervang door je gecontroleerde beleid vóór lancering.",
+    "privacyBody": "Reconnect is gratis en draait om 1-op-1-vriendschappen. Je videoantwoorden zijn vluchtig — verwijderd nadat beide vrienden ze hebben bekeken, nooit gearchiveerd. We verkopen je persoonsgegevens nooit. Geaggregeerde, geanonimiseerde trends worden alleen gedeeld als je daarvoor kiest.",
+    "termsBody": "Wees aardig: neem eerlijke antwoorden op, respecteer je vrienden en upload nooit iets illegaals of schadelijks. Reconnect wordt aangeboden 'as is' en is altijd gratis voor gebruikers. We kunnen deze voorwaarden bijwerken; door gebruik te blijven maken ga je akkoord met de wijzigingen."
   },
   "tabs": {
     "home": "Start",

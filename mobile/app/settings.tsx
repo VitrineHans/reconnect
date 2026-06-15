@@ -70,6 +70,19 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Legal */}
+        <Text style={styles.sectionLabel}>{t('settings.legal')}</Text>
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.row} onPress={() => router.push('/legal/privacy')}>
+            <Text style={styles.rowLabel}>{t('settings.privacyPolicy')}</Text>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.row, styles.rowDivider]} onPress={() => router.push('/legal/terms')}>
+            <Text style={styles.rowLabel}>{t('settings.terms')}</Text>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity style={styles.signOut} onPress={confirmSignOut}>
           <Text style={styles.signOutText}>{t('settings.signOut')}</Text>
         </TouchableOpacity>
