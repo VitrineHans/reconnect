@@ -107,7 +107,7 @@ interface RawGroup {
   name: string;
   created_by: string;
   current_question_id: string | null;
-  questions: { text: string; text_i18n: Record<string, string> | null } | null;
+  questions: { text: string } | null;
 }
 
 async function buildGroupState(raw: RawGroup, userId: string): Promise<GroupWithState> {
@@ -139,7 +139,7 @@ async function buildGroupState(raw: RawGroup, userId: string): Promise<GroupWith
     name: raw.name,
     createdBy: raw.created_by,
     members,
-    questionText: raw.questions ? localizedQuestionText(raw.questions.text, raw.questions.text_i18n) : null,
+    questionText: raw.questions ? localizedQuestionText(raw.questions.text) : null,
     currentQuestionId: raw.current_question_id,
     iAnswered,
     othersAnswered,
@@ -150,7 +150,7 @@ async function buildGroupState(raw: RawGroup, userId: string): Promise<GroupWith
 async function fetchGroupsWithState(userId: string): Promise<GroupWithState[]> {
   const { data, error } = await supabase
     .from('group_members')
-    .select('groups!inner ( id, name, created_by, current_question_id, questions!current_question_id ( text, text_i18n ) )')
+    .select('groups!inner ( id, name, created_by, current_question_id, questions!current_question_id ( text ) )')
     .eq('user_id', userId);
   if (error) throw new Error(error.message);
 

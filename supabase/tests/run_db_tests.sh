@@ -54,7 +54,6 @@ PSQL=(psql -v ON_ERROR_STOP=1 -h "$SOCK" -p "$PORT" -U postgres)
   -f "$SCRIPT_DIR/schema_min.sql" \
   -f "$SCRIPT_DIR/group_schema_min.sql" \
   -f "$MIGRATIONS/20260615000000_phase2_personalization.sql" \
-  -f "$MIGRATIONS/20260615000005_question_translations.sql" \
   -f "$SEEDS/questions.sql" \
   -f "$MIGRATIONS/20260615000001_phase2_rotate_personalized.sql" \
   -f "$MIGRATIONS/20260615000004_phase5_group_rotation.sql" \

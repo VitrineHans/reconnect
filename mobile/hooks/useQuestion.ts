@@ -29,7 +29,7 @@ async function fetchCurrentQuestion(friendshipId: string): Promise<Question | nu
   // Step 2: fetch the question directly by ID
   const { data: question, error: qError } = await supabase
     .from('questions')
-    .select('id, text, category, text_i18n')
+    .select('id, text, category')
     .eq('id', friendship.current_question_id)
     .single();
 
@@ -38,7 +38,7 @@ async function fetchCurrentQuestion(friendshipId: string): Promise<Question | nu
 
   return {
     id: question.id,
-    text: localizedQuestionText(question.text, question.text_i18n as Record<string, string> | null),
+    text: localizedQuestionText(question.text),
     category: question.category as Question['category'],
   };
 }

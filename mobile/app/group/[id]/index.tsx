@@ -21,7 +21,7 @@ interface HubData {
 async function loadHub(groupId: string, userId: string): Promise<HubData> {
   const { data: group, error } = await supabase
     .from('groups')
-    .select('name, current_question_id, questions!current_question_id ( text, text_i18n )')
+    .select('name, current_question_id, questions!current_question_id ( text )')
     .eq('id', groupId)
     .single();
   if (error || !group) throw new Error(error?.message ?? 'not found');
@@ -29,7 +29,7 @@ async function loadHub(groupId: string, userId: string): Promise<HubData> {
   const row = group as unknown as {
     name: string;
     current_question_id: string | null;
-    questions: { text: string; text_i18n: Record<string, string> | null } | null;
+    questions: { text: string } | null;
   };
 
   const { data: memberRows } = await supabase
@@ -53,7 +53,7 @@ async function loadHub(groupId: string, userId: string): Promise<HubData> {
 
   return {
     name: row.name,
-    questionText: row.questions ? localizedQuestionText(row.questions.text, row.questions.text_i18n) : null,
+    questionText: row.questions ? localizedQuestionText(row.questions.text) : null,
     currentQuestionId,
     members,
     answeredIds,
