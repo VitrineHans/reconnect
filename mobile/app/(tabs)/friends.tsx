@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { supabase } from '../../lib/supabase';
 import { sendExpoPushNotification } from '../../hooks/useNotifications';
 import { removeFriendship } from '../../hooks/useFriendships';
+import { useGroups } from '../../hooks/useGroups';
+import { GroupCard } from '../../components/GroupCard';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -186,7 +189,10 @@ export default function FriendsScreen() {
   const { t } = useTranslation();
   const { session } = useSession();
   const userId = session?.user?.id;
+  const router = useRouter();
+  const [view, setView] = useState<'friends' | 'groups'>('friends');
   const { search, setSearch, searchResults, pendingInvites, friendships, loading, sendInvite, respondToInvite, removeFriend } = useFriendsData(userId);
+  const { groups } = useGroups(userId ?? null);
 
   const confirmRemove = (f: Friendship) => {
     const name = f.other_user.display_name ?? f.other_user.username;
@@ -204,51 +210,84 @@ export default function FriendsScreen() {
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>{t('friends.title')}</Text>
 
-      <TextInput
-        style={styles.searchInput}
-        placeholder={t('friends.searchPlaceholder')}
-        placeholderTextColor={colors.textMuted}
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+      {/* Friends / Groups segmented control */}
+      <View style={styles.segment}>
+        <TouchableOpacity
+          style={[styles.segmentBtn, view === 'friends' && styles.segmentBtnActive]}
+          onPress={() => setView('friends')}
+        >
+          <Text style={[styles.segmentText, view === 'friends' && styles.segmentTextActive]}>{t('tabs.friends')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentBtn, view === 'groups' && styles.segmentBtnActive]}
+          onPress={() => setView('groups')}
+        >
+          <Text style={[styles.segmentText, view === 'groups' && styles.segmentTextActive]}>{t('group.sectionTitle')}</Text>
+        </TouchableOpacity>
+      </View>
 
-      {search.length > 0 && searchResults.length === 0 && (
-        <Text style={styles.emptyHint}>{t('friends.noUsersFound')}</Text>
-      )}
-      {search.length === 0 && (
-        <Text style={styles.emptyHint}>{t('friends.searchHint')}</Text>
-      )}
-      {searchResults.map(p => (
-        <SearchResultCard key={p.id} profile={p} onAdd={() => sendInvite(p.id)} />
-      ))}
-
-      {pendingInvites.length > 0 && (
+      {view === 'friends' ? (
         <>
-          <Text style={styles.sectionTitle}>{t('friends.pendingInvites')}</Text>
-          {pendingInvites.map(inv => (
-            <InviteCard
-              key={inv.id}
-              invite={inv}
-              onAccept={() => respondToInvite(inv.id, 'accepted')}
-              onDecline={() => respondToInvite(inv.id, 'declined')}
-            />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t('friends.searchPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+
+          {search.length > 0 && searchResults.length === 0 && (
+            <Text style={styles.emptyHint}>{t('friends.noUsersFound')}</Text>
+          )}
+          {search.length === 0 && (
+            <Text style={styles.emptyHint}>{t('friends.searchHint')}</Text>
+          )}
+          {searchResults.map(p => (
+            <SearchResultCard key={p.id} profile={p} onAdd={() => sendInvite(p.id)} />
+          ))}
+
+          {pendingInvites.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>{t('friends.pendingInvites')}</Text>
+              {pendingInvites.map(inv => (
+                <InviteCard
+                  key={inv.id}
+                  invite={inv}
+                  onAccept={() => respondToInvite(inv.id, 'accepted')}
+                  onDecline={() => respondToInvite(inv.id, 'declined')}
+                />
+              ))}
+            </>
+          )}
+
+          <Text style={styles.sectionTitle}>{t('friends.myFriends')}</Text>
+          {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: spacing[4] }} />}
+          {!loading && friendships.length === 0 && (
+            <Text style={styles.emptyHint}>{t('friends.noFriends')}</Text>
+          )}
+          {friendships.length > 0 && (
+            <Text style={styles.emptyHint}>{t('friends.removeHint')}</Text>
+          )}
+          {friendships.map(f => (
+            <FriendCard key={f.id} friendship={f} onLongPress={() => confirmRemove(f)} />
           ))}
         </>
+      ) : (
+        <>
+          <TouchableOpacity style={styles.newGroupBtn} onPress={() => router.push('/group/create')}>
+            <Text style={styles.newGroupText}>{t('group.newGroup')}</Text>
+          </TouchableOpacity>
+          {groups.length === 0 ? (
+            <Text style={styles.emptyHint}>{t('group.noGroups')}</Text>
+          ) : (
+            groups.map(g => (
+              <GroupCard key={g.id} group={g} onPress={() => router.push(`/group/${g.id}`)} />
+            ))
+          )}
+        </>
       )}
-
-      <Text style={styles.sectionTitle}>{t('friends.myFriends')}</Text>
-      {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: spacing[4] }} />}
-      {!loading && friendships.length === 0 && (
-        <Text style={styles.emptyHint}>{t('friends.noFriends')}</Text>
-      )}
-      {friendships.length > 0 && (
-        <Text style={styles.emptyHint}>{t('friends.removeHint')}</Text>
-      )}
-      {friendships.map(f => (
-        <FriendCard key={f.id} friendship={f} onLongPress={() => confirmRemove(f)} />
-      ))}
     </ScrollView>
   );
 }
@@ -267,6 +306,43 @@ const styles = StyleSheet.create({
     fontFamily: typography.families.display,
     color: colors.text,
     marginBottom: spacing[5],
+  },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface2,
+    borderRadius: radius.full,
+    padding: 4,
+    marginBottom: spacing[5],
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: spacing[2],
+    borderRadius: radius.full,
+    alignItems: 'center',
+  },
+  segmentBtnActive: {
+    backgroundColor: colors.surface,
+  },
+  segmentText: {
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodySemiBold,
+    color: colors.textMuted,
+  },
+  segmentTextActive: {
+    color: colors.text,
+  },
+  newGroupBtn: {
+    borderWidth: 1.5,
+    borderColor: colors.ember,
+    borderRadius: radius.md,
+    paddingVertical: spacing[3],
+    alignItems: 'center',
+    marginBottom: spacing[4],
+  },
+  newGroupText: {
+    color: colors.ember,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodySemiBold,
   },
   searchInput: {
     borderWidth: 1.5,
