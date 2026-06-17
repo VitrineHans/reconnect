@@ -61,3 +61,13 @@ PSQL=(psql -v ON_ERROR_STOP=1 -h "$SOCK" -p "$PORT" -U postgres)
   -f "$SCRIPT_DIR/rotate_group.test.sql"
 
 echo "rotate_daily_questions() + rotate_group_questions() DB tests: PASS"
+
+# ── Group RLS test (separate DB: needs RLS enabled + a non-superuser role) ─────
+"${PSQL[@]}" -d postgres -c "CREATE DATABASE rls_test;" >/dev/null
+"${PSQL[@]}" -q -d rls_test \
+  -f "$SCRIPT_DIR/rls_auth_stub.sql" \
+  -f "$SCRIPT_DIR/schema_min.sql" \
+  -f "$MIGRATIONS/20260615000003_phase5_groups.sql" \
+  -f "$SCRIPT_DIR/group_rls.test.sql"
+
+echo "group RLS DB test: PASS"
