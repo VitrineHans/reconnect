@@ -36,7 +36,7 @@ Enhancement track
   Personalization (tagged questions + rotation) ... complete (DB-verified)
   Reveal push (client-side) ....................... complete
   Settings / legal / unfriend ..................... complete
-  Groups (schema, RLS, rotation, hooks, UI) ....... complete (UI sim-verified; RLS needs real-Supabase check)
+  Groups (schema, RLS, rotation, hooks, UI) ....... complete (UI sim-verified; RLS verified via role-based harness)
   Notification prefs toggle ....................... complete
   E2E tests (Playwright) .......................... not started
 ```
@@ -64,9 +64,10 @@ Enhancement track
 
 ## Known gaps / needs verification
 
-- All RLS (existing + groups) is unverified locally — no auth context in the throwaway Postgres harness. Verify against a real Supabase instance.
-- Real-device + push testing deferred (simulators can't receive push) — needs an EAS `preview` build.
-- Phase 4 Monetization and Playwright E2E not started.
+- **Group RLS is verified** via a role-based harness test (`supabase/tests/group_rls.test.sql`): stubbed `auth.uid()` + non-superuser role, asserting membership/roster visibility + answer-to-unlock. The older 1:1/storage policies follow the same patterns and could get equivalent tests, but aren't a known risk.
+- **Personalization on an existing DB**: applying migrations runs `20260617000000_backfill_question_tags.sql`, which tags the existing question rows by text (re-running the seed would duplicate them). Verified on Postgres.
+- **Real-device + push** can't be tested here — simulators can't receive push; it needs an EAS `preview` build + Apple/Expo credentials (environment limit, not a code defect).
+- Phase 4 Monetization and Playwright E2E not started (future scope).
 
 ## Blockers
 

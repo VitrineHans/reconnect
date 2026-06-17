@@ -90,7 +90,7 @@ Tables (`supabase/migrations/`):
 - `question_ratings` — user_id, question_id, rating (-1/1)
 - `groups` / `group_members` — Phase 5 (additive; 1:1 path untouched)
 
-RLS enabled on all tables. Server functions: `rotate_daily_questions()`, `rotate_group_questions()`, streak trigger + `reset_expired_streaks()` (pg_cron). RLS is unverified locally — verify against a real Supabase instance.
+RLS enabled on all tables. Server functions: `rotate_daily_questions()`, `rotate_group_questions()`, streak trigger + `reset_expired_streaks()` (pg_cron). Group RLS is verified via a role-based harness test (`supabase/tests/group_rls.test.sql`); rotation logic is verified on real Postgres (`supabase/tests/run_db_tests.sh`).
 
 ---
 
