@@ -22,7 +22,8 @@ create table public.friendships (
   user_b              uuid not null,
   current_question_id uuid,
   window_opened_at    timestamptz,
-  streak_count        integer default 0
+  streak_count        integer default 0,
+  last_answered_at    timestamptz
 );
 
 create table public.question_responses (

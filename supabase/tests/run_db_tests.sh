@@ -71,3 +71,19 @@ echo "rotate_daily_questions() + rotate_group_questions() DB tests: PASS"
   -f "$SCRIPT_DIR/group_rls.test.sql"
 
 echo "group RLS DB test: PASS"
+
+# ── Streak engine test (24h window) ──────────────────────────────────────────
+"${PSQL[@]}" -d postgres -c "CREATE DATABASE streak_test;" >/dev/null
+"${PSQL[@]}" -q -d streak_test -c "
+  create schema if not exists cron;
+  create table if not exists cron.job (jobname text);
+  create or replace function cron.schedule(text, text, text) returns bigint language sql as \$\$ select 1::bigint \$\$;
+  create or replace function cron.unschedule(text) returns boolean language sql as \$\$ select true \$\$;
+"
+"${PSQL[@]}" -q -d streak_test \
+  -f "$SCRIPT_DIR/schema_min.sql" \
+  -f "$MIGRATIONS/20260413000000_phase3_streaks.sql" \
+  -f "$MIGRATIONS/20260624000001_streak_24h_window.sql" \
+  -f "$SCRIPT_DIR/streak.test.sql"
+
+echo "streak engine (24h) DB test: PASS"
