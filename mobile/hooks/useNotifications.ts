@@ -1,9 +1,12 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../lib/i18n';
 import { supabase } from '../lib/supabase';
 import { getNotificationsEnabled } from '../lib/notificationPrefs';
 import { registerForPushNotifications } from './usePushToken';
+
+const RECONNECT_DAYS = 10;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -138,5 +141,60 @@ export async function applyNotificationPreference(userId: string, enabled: boole
   const token = await registerForPushNotifications();
   if (token) {
     await supabase.from('profiles').update({ push_token: token }).eq('id', userId);
+  }
+}
+
+/**
+ * Revive a fading friendship via a notification (not an in-app nudge). Schedules
+ * a local "reconnect with {name}" reminder for RECONNECT_DAYS from now, replacing
+ * any previously scheduled one for this friendship. Called whenever you answer,
+ * so the timer keeps resetting while you're active and only fires if the
+ * friendship goes quiet. Best-effort; respects the notifications toggle.
+ */
+export async function scheduleReconnectNotification(
+  friendshipId: string,
+  currentUserId: string,
+): Promise<void> {
+  if (Platform.OS === 'web') return;
+  if (!(await getNotificationsEnabled())) return;
+
+  const key = `reconnect_notif_${friendshipId}`;
+  try {
+    const previous = await AsyncStorage.getItem(key);
+    if (previous) await Notifications.cancelScheduledNotificationAsync(previous);
+  } catch {
+    // ignore — we'll just schedule a fresh one
+  }
+
+  let name = i18n.t('notifications.friendFallback');
+  try {
+    const { data: friendship } = await supabase
+      .from('friendships').select('user_a, user_b').eq('id', friendshipId).single();
+    if (friendship) {
+      const friendId = friendship.user_a === currentUserId ? friendship.user_b : friendship.user_a;
+      const { data: profile } = await supabase
+        .from('profiles').select('username, display_name').eq('id', friendId).single();
+      const p = profile as { username?: string; display_name?: string } | null;
+      name = p?.display_name ?? p?.username ?? name;
+    }
+  } catch {
+    // fall back to the generic friend name
+  }
+
+  try {
+    const id = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: i18n.t('notifications.reconnectTitle'),
+        body: i18n.t('notifications.reconnectBody', { name }),
+        data: { type: 'reconnect', friendshipId, screen: 'home' },
+      },
+      trigger: {
+        date: new Date(Date.now() + RECONNECT_DAYS * 24 * 60 * 60 * 1000),
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+      },
+    });
+    await AsyncStorage.setItem(key, id);
+  } catch {
+    // scheduling is best-effort
   }
 }

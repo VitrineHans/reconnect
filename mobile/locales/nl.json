@@ -68,7 +68,9 @@
   "notifications": {
     "streakRiskTitle": "Streak in gevaar 🔥",
     "streakRiskBody": "Je hebt nog 4 uur om te antwoorden voor {{name}}!",
-    "friendFallback": "je vriend"
+    "friendFallback": "je vriend",
+    "reconnectTitle": "Opnieuw verbinden 🌱",
+    "reconnectBody": "Het is alweer even geleden met {{name}} — beantwoord de vraag van vandaag."
   },
   "questionnaire": {
     "stepLabel": "{{current}} van {{total}}",

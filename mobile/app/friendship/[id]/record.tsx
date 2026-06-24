@@ -8,7 +8,7 @@ import { useVideoUpload } from '../../../hooks/useVideoUpload';
 import { useSession } from '../../../hooks/useSession';
 import { supabase } from '../../../lib/supabase';
 import { colors, typography, spacing, radius } from '../../../theme/tokens';
-import { notifyFriendOfReveal } from '../../../hooks/useNotifications';
+import { notifyFriendOfReveal, scheduleReconnectNotification } from '../../../hooks/useNotifications';
 
 export default function RecordScreen() {
   const { t } = useTranslation();
@@ -31,6 +31,8 @@ export default function RecordScreen() {
           ? `simulator/${id}/${session.user.id}/${questionId}.mp4`
           : await upload(id, session.user.id, questionId, uri);
       await insertResponseAndStreak(id, questionId, session.user.id, storagePath);
+      // Reset the reconnect timer for this friendship (fires if it goes quiet).
+      void scheduleReconnectNotification(id, session.user.id);
       router.replace('/(tabs)/home');
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : t('flow.uploadFailed'));

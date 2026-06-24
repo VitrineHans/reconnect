@@ -68,7 +68,9 @@
   "notifications": {
     "streakRiskTitle": "Streak at risk 🔥",
     "streakRiskBody": "You have 4 hours left to answer for {{name}}!",
-    "friendFallback": "your friend"
+    "friendFallback": "your friend",
+    "reconnectTitle": "Reconnect 🌱",
+    "reconnectBody": "It's been a while with {{name}} — answer today's question to reconnect."
   },
   "questionnaire": {
     "stepLabel": "{{current}} of {{total}}",
