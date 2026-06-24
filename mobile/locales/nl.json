@@ -177,7 +177,6 @@
   },
   "card": {
     "timeLeft": "nog {{hours}}u {{minutes}}m",
-    "reconnect": "🌱 Opnieuw verbinden — alweer even geleden",
     "state": {
       "revealReady": "👀  Klaar om te onthullen",
       "yourTurn": "⏳  Jouw beurt",

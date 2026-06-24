@@ -20,25 +20,6 @@ export interface FriendshipWithState {
   expiresAt: string | null;
   myResponseId: string | null;
   currentQuestionId: string | null;
-  fading: boolean;
-}
-
-const FADING_DAYS = 10;
-
-/**
- * A friendship is "fading" when it last completed an exchange (or, if it never
- * has, was created) more than FADING_DAYS ago — the cue to gently surface a
- * reconnect nudge. A brand-new friendship that simply hasn't exchanged yet is
- * not fading.
- */
-export function isFadingFriendship(
-  lastAnsweredAt: string | null,
-  createdAt: string | null,
-  now: number = Date.now(),
-): boolean {
-  const reference = lastAnsweredAt ?? createdAt;
-  if (!reference) return false;
-  return now - Date.parse(reference) > FADING_DAYS * 24 * 60 * 60 * 1000;
 }
 
 const STATE_PRIORITY: Record<FriendshipState, number> = {
@@ -61,8 +42,6 @@ interface RawFriendship {
   user_a: string;
   user_b: string;
   current_question_id: string | null;
-  last_answered_at: string | null;
-  created_at: string | null;
   questions: { text: string } | null;
   question_responses: RawResponse[];
 }
@@ -76,8 +55,6 @@ async function fetchFriendshipsWithState(userId: string): Promise<FriendshipWith
       user_a,
       user_b,
       current_question_id,
-      last_answered_at,
-      created_at,
       questions!current_question_id ( text ),
       question_responses ( id, user_id, question_id, watched_at, expires_at )
     `)
@@ -166,7 +143,6 @@ function buildFriendshipWithState(
     expiresAt: myResponse?.expires_at ?? null,
     myResponseId: myResponse?.id ?? null,
     currentQuestionId: currentQId,
-    fading: isFadingFriendship(f.last_answered_at, f.created_at),
   };
 }
 

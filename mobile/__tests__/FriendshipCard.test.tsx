@@ -16,7 +16,6 @@ function makeFriendship(overrides: Partial<FriendshipWithState> = {}): Friendshi
     expiresAt: null,
     myResponseId: null,
     currentQuestionId: null,
-    fading: false,
     ...overrides,
   };
 }
@@ -92,20 +91,6 @@ describe('FriendshipCard', () => {
       />,
     );
     expect(getByText('alice_handle')).toBeTruthy();
-  });
-
-  it('renders the reconnect nudge for a fading friendship', () => {
-    const { getByText } = render(
-      <FriendshipCard friendship={makeFriendship({ fading: true })} onPress={jest.fn()} />,
-    );
-    expect(getByText("🌱 Reconnect — it's been a while")).toBeTruthy();
-  });
-
-  it('does not show the reconnect nudge for an active friendship', () => {
-    const { queryByText } = render(
-      <FriendshipCard friendship={makeFriendship({ fading: false })} onPress={jest.fn()} />,
-    );
-    expect(queryByText("🌱 Reconnect — it's been a while")).toBeNull();
   });
 
   it('renders question text preview', () => {
