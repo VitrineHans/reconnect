@@ -66,7 +66,7 @@ function StateLabel({ state }: { state: FriendshipState }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
-  const { id, friendProfile, streakCount, questionText, state, expiresAt } = friendship;
+  const { id, friendProfile, streakCount, questionText, state, expiresAt, fading } = friendship;
   const friendName = friendProfile.display_name ?? friendProfile.username;
   const { t } = useTranslation();
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -106,7 +106,8 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
   }, [expiresAt, state, t]);
 
   const borderColor =
-    state === 'reveal_ready' ? colors.stateRevealReady
+    fading                   ? colors.mint
+    : state === 'reveal_ready' ? colors.stateRevealReady
     : state === 'your_turn'  ? colors.stateYourTurn
     :                          colors.stateWaiting;
 
@@ -129,6 +130,12 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
           { transform: [{ scale: scaleAnim }] },
         ]}
       >
+        {fading && (
+          <View style={styles.reconnectBanner}>
+            <Text style={styles.reconnectText}>{t('card.reconnect')}</Text>
+          </View>
+        )}
+
         {/* Header: avatar + name + state label + streak */}
         <View style={styles.header}>
           <Avatar name={friendName} />
@@ -191,6 +198,22 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     padding: spacing[5],
     marginBottom: spacing[4],
+  },
+
+  // Reconnect nudge (fading friendship)
+  reconnectBanner: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface3,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing[3],
+    paddingVertical: 4,
+    marginBottom: spacing[3],
+  },
+  reconnectText: {
+    color: colors.mint,
+    fontSize: typography.sizes.xs,
+    fontWeight: '700',
+    letterSpacing: typography.letterSpacing.wide,
   },
 
   // Avatar

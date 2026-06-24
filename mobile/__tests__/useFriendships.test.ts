@@ -116,6 +116,7 @@ describe('useFriendships — sort order', () => {
         expiresAt: null,
         myResponseId: null,
         currentQuestionId: null,
+        fading: false,
       },
       {
         id: 'f-reveal',
@@ -127,6 +128,7 @@ describe('useFriendships — sort order', () => {
         expiresAt: null,
         myResponseId: 'r-1',
         currentQuestionId: null,
+        fading: false,
       },
       {
         id: 'f-turn',
@@ -138,6 +140,7 @@ describe('useFriendships — sort order', () => {
         expiresAt: null,
         myResponseId: null,
         currentQuestionId: null,
+        fading: false,
       },
     ];
 

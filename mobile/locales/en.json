@@ -177,6 +177,7 @@
   },
   "card": {
     "timeLeft": "{{hours}}h {{minutes}}m left",
+    "reconnect": "🌱 Reconnect — it's been a while",
     "state": {
       "revealReady": "👀  Reveal ready",
       "yourTurn": "⏳  Your turn",
