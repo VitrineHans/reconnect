@@ -4,6 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../../lib/supabase';
 import { VideoPlayer } from '../../../components/VideoPlayer';
+import { ReactionPicker } from '../../../components/ReactionPicker';
+import { sendReaction, type Reaction } from '../../../hooks/useReactions';
 import { useSession } from '../../../hooks/useSession';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import i18n from '../../../lib/i18n';
@@ -12,6 +14,7 @@ interface RevealResponse {
   id: string;
   video_url: string;
   question_id: string;
+  user_id: string;
 }
 
 interface RevealState {
@@ -37,7 +40,7 @@ async function fetchRevealData(
 
   const { data: response, error: rErr } = await supabase
     .from('question_responses')
-    .select('id, video_url, question_id')
+    .select('id, video_url, question_id, user_id')
     .eq('friendship_id', friendshipId)
     .neq('user_id', userId)
     .eq('question_id', friendship.current_question_id)
@@ -56,7 +59,12 @@ async function fetchRevealData(
   }
 
   return {
-    response: { id: response.id, video_url: response.video_url, question_id: response.question_id },
+    response: {
+      id: response.id,
+      video_url: response.video_url,
+      question_id: response.question_id,
+      user_id: response.user_id,
+    },
     signedUrl: urlData.signedUrl,
   };
 }
@@ -73,6 +81,16 @@ export default function RevealScreen() {
     loading: true,
     error: null,
   });
+  const [reacting, setReacting] = useState(false);
+
+  const handleReact = async (reaction: Reaction) => {
+    const me = session?.user?.id;
+    const resp = state.response;
+    if (me && resp && id) {
+      try { await sendReaction(id, resp.question_id, me, resp.user_id, reaction); } catch { /* best-effort */ }
+    }
+    router.replace('/(tabs)/home');
+  };
 
   useEffect(() => {
     const userId = session?.user?.id;
@@ -104,13 +122,22 @@ export default function RevealScreen() {
     );
   }
 
+  if (reacting) {
+    return (
+      <ReactionPicker
+        onSend={(reaction) => { void handleReact(reaction); }}
+        onSkip={() => router.replace('/(tabs)/home')}
+      />
+    );
+  }
+
   return (
     <VideoPlayer
       signedUrl={state.signedUrl}
       storagePath={state.response.video_url}
       friendshipId={id}
       questionId={state.response.question_id}
-      onWatched={() => router.replace('/(tabs)/home')}
+      onWatched={() => setReacting(true)}
     />
   );
 }

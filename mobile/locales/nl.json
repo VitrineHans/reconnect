@@ -252,6 +252,16 @@
     "leaveConfirmBody": "Je krijgt dan geen vragen meer van deze groep.",
     "loadFailed": "Kon deze groep niet laden."
   },
+  "reactions": {
+    "prompt": "Stuur een reactie 👀",
+    "placeholder": "Voeg een korte reactie toe…",
+    "send": "Versturen",
+    "skip": "Overslaan",
+    "pushTitle": "Nieuwe reactie 💬",
+    "bannerTitle": "Nieuwe reacties",
+    "reactedToYour": "{{name}} reageerde op je antwoord",
+    "dismiss": "Oké"
+  },
   "tabs": {
     "home": "Start",
     "friends": "Vrienden",

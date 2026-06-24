@@ -252,6 +252,16 @@
     "leaveConfirmBody": "You'll stop getting this group's questions.",
     "loadFailed": "Couldn't load this group."
   },
+  "reactions": {
+    "prompt": "Send a reaction 👀",
+    "placeholder": "Add a quick reply…",
+    "send": "Send",
+    "skip": "Skip",
+    "pushTitle": "New reaction 💬",
+    "bannerTitle": "New reactions",
+    "reactedToYour": "{{name}} reacted to your answer",
+    "dismiss": "Got it"
+  },
   "tabs": {
     "home": "Home",
     "friends": "Friends",

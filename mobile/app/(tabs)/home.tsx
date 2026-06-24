@@ -7,9 +7,10 @@ import { useSession } from '../../hooks/useSession';
 import { useFriendships } from '../../hooks/useFriendships';
 import type { FriendshipWithState } from '../../hooks/useFriendships';
 import { useGroups } from '../../hooks/useGroups';
+import { useUnseenReactions } from '../../hooks/useReactions';
 import { FriendshipCard } from '../../components/FriendshipCard';
 import { GroupCard } from '../../components/GroupCard';
-import { colors, typography, spacing } from '../../theme/tokens';
+import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 export default function HomeScreen() {
   const { session } = useSession();
@@ -18,10 +19,12 @@ export default function HomeScreen() {
   const userId = session?.user?.id ?? null;
   const { friendships, loading, error, refetch } = useFriendships(userId);
   const { groups, refetch: refetchGroups } = useGroups(userId);
+  const { reactions, markSeen, refetch: refetchReactions } = useUnseenReactions(userId);
 
   useFocusEffect(useCallback(() => {
     refetch();
     refetchGroups();
+    refetchReactions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]));
 
@@ -59,7 +62,28 @@ export default function HomeScreen() {
       )}
       contentContainerStyle={styles.list}
       style={styles.screen}
-      ListHeaderComponent={<Text style={styles.heading}>{t('home.title')}</Text>}
+      ListHeaderComponent={
+        <View>
+          <Text style={styles.heading}>{t('home.title')}</Text>
+          {reactions.length > 0 && (
+            <View style={styles.reactionsBanner}>
+              <View style={styles.reactionsHeader}>
+                <Text style={styles.reactionsTitle}>{t('reactions.bannerTitle')}</Text>
+                <TouchableOpacity onPress={markSeen} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.reactionsDismiss}>{t('reactions.dismiss')}</Text>
+                </TouchableOpacity>
+              </View>
+              {reactions.map((r) => (
+                <Text key={r.id} style={styles.reactionItem} numberOfLines={2}>
+                  {r.emoji ? `${r.emoji} ` : '💬 '}
+                  {t('reactions.reactedToYour', { name: r.fromName })}
+                  {r.body ? `: “${r.body}”` : ''}
+                </Text>
+              ))}
+            </View>
+          )}
+        </View>
+      }
       ListEmptyComponent={
         <Text style={styles.emptyText}>{t('home.empty')}</Text>
       }
@@ -91,6 +115,29 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes['2xl'], fontFamily: typography.families.display,
     color: colors.text, letterSpacing: typography.letterSpacing.tight,
     marginTop: spacing[12], marginBottom: spacing[4],
+  },
+  reactionsBanner: {
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.gold,
+    borderRadius: radius.lg,
+    padding: spacing[4],
+    marginBottom: spacing[5],
+  },
+  reactionsHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: spacing[2],
+  },
+  reactionsTitle: {
+    fontSize: typography.sizes.sm, fontFamily: typography.families.bodySemiBold,
+    color: colors.text, letterSpacing: typography.letterSpacing.wide, textTransform: 'uppercase',
+  },
+  reactionsDismiss: {
+    fontSize: typography.sizes.sm, fontFamily: typography.families.bodyMedium, color: colors.ember,
+  },
+  reactionItem: {
+    fontSize: typography.sizes.base, fontFamily: typography.families.body,
+    color: colors.textSecondary, marginTop: 2,
   },
   groupsSection: { marginTop: spacing[6] },
   groupsHeader: {
