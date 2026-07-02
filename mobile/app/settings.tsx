@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch, ActivityIndicator, BackHandler } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import Constants from 'expo-constants';
 import i18n, {
   SUPPORTED_LANGUAGES,
   LANGUAGE_NAMES,
@@ -9,18 +10,72 @@ import i18n, {
 } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
 import { useSession } from '../hooks/useSession';
+import { useProfile } from '../hooks/useProfile';
 import { getNotificationsEnabled, setNotificationsEnabled } from '../lib/notificationPrefs';
 import { applyNotificationPreference } from '../hooks/useNotifications';
+import { validateDisplayName, updateDisplayName, pickAndUploadAvatar } from '../lib/profileEdit';
+import { Avatar } from '../components/Avatar';
 import { colors, typography, spacing, radius } from '../theme/tokens';
 
 export default function SettingsScreen() {
   const { t, i18n: i18nInstance } = useTranslation();
   const router = useRouter();
   const { session } = useSession();
+  const { profile, refetch } = useProfile(session);
   const current = i18nInstance.language;
 
+  const [displayName, setDisplayName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(true);
+
   useEffect(() => { getNotificationsEnabled().then(setNotifEnabled); }, []);
+  useEffect(() => { setDisplayName(profile?.display_name ?? ''); }, [profile?.display_name]);
+
+  // Back — from wherever Settings was reached — always lands on the Profile page.
+  const goBackToProfile = useCallback(() => {
+    router.replace('/(tabs)/profile');
+  }, [router]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      goBackToProfile();
+      return true;
+    });
+    return () => sub.remove();
+  }, [goBackToProfile]);
+
+  const nameDirty = profile != null && displayName.trim() !== (profile.display_name ?? '');
+
+  const saveDisplayName = async () => {
+    if (!session?.user?.id) return;
+    if (!validateDisplayName(displayName)) {
+      Alert.alert(t('profile.invalidTitle'), t('profile.invalidDisplayName'));
+      return;
+    }
+    setSavingName(true);
+    try {
+      await updateDisplayName(session.user.id, displayName);
+      refetch();
+    } catch (e) {
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : '');
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const changePhoto = async () => {
+    if (!session?.user?.id || uploading) return;
+    setUploading(true);
+    try {
+      const url = await pickAndUploadAvatar(session.user.id);
+      if (url) refetch();
+    } catch (e) {
+      Alert.alert(t('profile.uploadFailed'), e instanceof Error ? e.message : '');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const toggleNotifications = async (value: boolean) => {
     setNotifEnabled(value);
@@ -43,17 +98,75 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
+
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+        <TouchableOpacity
+          onPress={goBackToProfile}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
+        >
           <Text style={styles.back}>‹</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{t('settings.title')}</Text>
         <View style={styles.backSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        {/* Profile — the single place to edit personal info */}
+        <Text style={styles.sectionLabel}>{t('settings.profileSection')}</Text>
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.row} onPress={changePhoto} accessibilityRole="button" disabled={uploading}>
+            {uploading ? (
+              <View style={styles.avatarLoading}><ActivityIndicator color={colors.ember} /></View>
+            ) : (
+              <Avatar
+                name={profile?.display_name ?? profile?.username ?? '?'}
+                url={profile?.avatar_url}
+                size={48}
+              />
+            )}
+            <View style={styles.rowTextGroup}>
+              <Text style={[styles.rowLabel, styles.photoLabel]}>{t('profile.changePhoto')}</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+
+          <View style={[styles.row, styles.rowDivider, styles.nameRow]}>
+            <View style={styles.rowTextGroup}>
+              <Text style={styles.fieldLabel}>{t('profile.displayName')}</Text>
+              <TextInput
+                style={styles.nameInput}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder={t('profile.displayNamePlaceholder')}
+                placeholderTextColor={colors.textMuted}
+                maxLength={50}
+                returnKeyType="done"
+                onSubmitEditing={saveDisplayName}
+                accessibilityLabel={t('profile.displayName')}
+              />
+            </View>
+            {nameDirty && (
+              <TouchableOpacity style={styles.saveBtn} onPress={saveDisplayName} disabled={savingName} accessibilityRole="button">
+                {savingName
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.saveBtnText}>{t('profile.save')}</Text>}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={[styles.row, styles.rowDivider]}>
+            <View style={styles.rowTextGroup}>
+              <Text style={styles.fieldLabel}>{t('settings.username')}</Text>
+              <Text style={styles.rowLabel}>@{profile?.username ?? ''}</Text>
+            </View>
+          </View>
+        </View>
+
         {/* Language */}
         <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
         <Text style={styles.sectionSubtitle}>{t('settings.languageSubtitle')}</Text>
@@ -111,6 +224,15 @@ export default function SettingsScreen() {
             <Text style={styles.rowLabel}>{t('settings.terms')}</Text>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* About */}
+        <Text style={styles.sectionLabel}>{t('settings.about')}</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>{t('settings.version')}</Text>
+            <Text style={styles.rowSubtitle}>{appVersion}</Text>
+          </View>
         </View>
 
         <TouchableOpacity style={styles.signOut} onPress={confirmSignOut}>
@@ -180,6 +302,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[4],
+    gap: spacing[3],
   },
   rowDivider: {
     borderTopWidth: 1,
@@ -198,6 +321,48 @@ const styles = StyleSheet.create({
     fontFamily: typography.families.body,
     color: colors.textMuted,
     marginTop: 2,
+  },
+  avatarLoading: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoLabel: {
+    color: colors.ember,
+  },
+  nameRow: {
+    alignItems: 'flex-end',
+  },
+  fieldLabel: {
+    fontSize: typography.sizes.xs,
+    fontFamily: typography.families.bodySemiBold,
+    color: colors.textSecondary,
+    letterSpacing: typography.letterSpacing.wide,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  nameInput: {
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.body,
+    color: colors.text,
+    paddingVertical: 2,
+    paddingHorizontal: 0,
+  },
+  saveBtn: {
+    backgroundColor: colors.ember,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  saveBtnText: {
+    color: '#fff',
+    fontSize: typography.sizes.sm,
+    fontFamily: typography.families.bodySemiBold,
   },
   check: {
     fontSize: typography.sizes.base,

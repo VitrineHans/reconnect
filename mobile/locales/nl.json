@@ -256,7 +256,11 @@
     "notificationsSubtitle": "Reveals, streak-herinneringen & uitnodigingen",
     "legal": "Juridisch",
     "privacyPolicy": "Privacybeleid",
-    "terms": "Servicevoorwaarden"
+    "terms": "Servicevoorwaarden",
+    "profileSection": "Profiel",
+    "username": "Gebruikersnaam",
+    "about": "Over",
+    "version": "Versie"
   },
   "legal": {
     "privacyTitle": "Privacybeleid",

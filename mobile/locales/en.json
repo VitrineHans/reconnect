@@ -256,7 +256,11 @@
     "notificationsSubtitle": "Reveals, streak reminders & invites",
     "legal": "Legal",
     "privacyPolicy": "Privacy Policy",
-    "terms": "Terms of Service"
+    "terms": "Terms of Service",
+    "profileSection": "Profile",
+    "username": "Username",
+    "about": "About",
+    "version": "Version"
   },
   "legal": {
     "privacyTitle": "Privacy Policy",

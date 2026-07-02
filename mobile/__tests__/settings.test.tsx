@@ -3,8 +3,9 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 
+const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ back: jest.fn(), push: jest.fn(), replace: mockReplace }),
 }));
 jest.mock('../lib/supabase', () => ({
   supabase: { auth: { signOut: jest.fn() } },
@@ -45,5 +46,19 @@ describe('SettingsScreen', () => {
     expect(getByText('Account')).toBeTruthy();
     expect(getByText('Edit your answers')).toBeTruthy();
     expect(getByText('Sign out')).toBeTruthy();
+  });
+
+  it('hosts the personal-profile editing section (photo + display name)', () => {
+    const { getByText, getByLabelText } = render(<SettingsScreen />);
+    expect(getByText('Change photo')).toBeTruthy();
+    expect(getByLabelText('Display name')).toBeTruthy();
+    expect(getByText('Username')).toBeTruthy();
+  });
+
+  it('back always lands on the Profile page', () => {
+    mockReplace.mockClear();
+    const { getByLabelText } = render(<SettingsScreen />);
+    fireEvent.press(getByLabelText('Back'));
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/profile');
   });
 });
