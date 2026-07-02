@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { FriendshipWithState, FriendshipState } from '../hooks/useFriendships';
+import { Avatar } from './Avatar';
 import { colors, radius, shadows, spacing, typography } from '../theme/tokens';
 
 export interface FriendshipCardProps {
@@ -19,29 +20,7 @@ function getTimeRemaining(expiresAt: string, t: TFunction): string {
   return t('card.timeLeft', { hours, minutes });
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((w) => w[0] ?? '')
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-function getPreview(questionText: string | null): string {
-  if (!questionText) return '';
-  return questionText.length > 80 ? `${questionText.slice(0, 80)}…` : questionText;
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-function Avatar({ name }: { name: string }) {
-  return (
-    <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{getInitials(name)}</Text>
-    </View>
-  );
-}
 
 function StreakBadge({ count }: { count: number }) {
   return (
@@ -65,7 +44,7 @@ function StateLabel({ state }: { state: FriendshipState }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
+export const FriendshipCard = memo(function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
   const { id, friendProfile, streakCount, questionText, state, expiresAt } = friendship;
   const friendName = friendProfile.display_name ?? friendProfile.username;
   const { t } = useTranslation();
@@ -113,13 +92,15 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
   const cardShadow =
     state === 'reveal_ready' ? shadows.goldGlow
     : state === 'your_turn'  ? shadows.emberGlow
-    :                          shadows.soft;
+    :                          shadows.medium;
 
   return (
     <Pressable
       testID={`friendship-card-${id}`}
       onPress={() => onPress(id)}
-      style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+      accessibilityRole="button"
+      accessibilityLabel={t(STATE_META[state].labelKey) + ' — ' + friendName}
+      style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] })}
     >
       <Animated.View
         style={[
@@ -131,7 +112,9 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
       >
         {/* Header: avatar + name + state label + streak */}
         <View style={styles.header}>
-          <Avatar name={friendName} />
+          <View style={styles.avatarWrap}>
+            <Avatar name={friendName} url={friendProfile.avatar_url} size={48} />
+          </View>
           <View style={styles.headerText}>
             <Text style={styles.friendName} numberOfLines={1}>
               {friendName}
@@ -141,11 +124,9 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
           <StreakBadge count={streakCount} />
         </View>
 
-        {/* Question preview */}
+        {/* Question — always the full text, never truncated */}
         {questionText != null && (
-          <Text style={styles.questionPreview} numberOfLines={2}>
-            {getPreview(questionText)}
-          </Text>
+          <Text style={styles.question}>{questionText}</Text>
         )}
 
         {/* Countdown (your_turn only) */}
@@ -180,36 +161,21 @@ export function FriendshipCard({ friendship, onPress }: FriendshipCardProps) {
       </Animated.View>
     </Pressable>
   );
-}
+});
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1.5,
     padding: spacing[5],
     marginBottom: spacing[4],
   },
 
-  // Avatar
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface3,
-    alignItems: 'center',
-    justifyContent: 'center',
+  avatarWrap: {
     marginRight: spacing[3],
-    borderWidth: 1,
-    borderColor: colors.strokeStrong,
-  },
-  avatarText: {
-    color: colors.textSecondary,
-    fontSize: typography.sizes.sm,
-    fontWeight: '600',
-    letterSpacing: typography.letterSpacing.wider,
   },
 
   // Header layout
@@ -225,12 +191,12 @@ const styles = StyleSheet.create({
   friendName: {
     color: colors.text,
     fontSize: typography.sizes.md,
-    fontWeight: '600',
+    fontFamily: typography.families.bodyBold,
     letterSpacing: typography.letterSpacing.tight,
   },
   stateLabel: {
     fontSize: typography.sizes.xs,
-    fontWeight: '500',
+    fontFamily: typography.families.bodyMedium,
     letterSpacing: typography.letterSpacing.wide,
     textTransform: 'uppercase',
   },
@@ -239,34 +205,34 @@ const styles = StyleSheet.create({
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface3,
+    backgroundColor: colors.surface2,
     borderRadius: radius.full,
     paddingHorizontal: spacing[2],
     paddingVertical: 4,
     gap: 3,
     borderWidth: 1,
-    borderColor: colors.strokeStrong,
+    borderColor: colors.stroke,
   },
   streakCount: {
     color: colors.gold,
     fontSize: typography.sizes.sm,
-    fontWeight: '700',
+    fontFamily: typography.families.bodyBold,
   },
 
-  // Question
-  questionPreview: {
-    color: colors.textSecondary,
-    fontSize: typography.sizes.sm,
-    lineHeight: typography.sizes.sm * typography.lineHeights.relaxed,
+  // Question — the centrepiece of the card
+  question: {
+    color: colors.text,
+    fontSize: typography.sizes.base,
+    fontFamily: typography.families.bodyMedium,
+    lineHeight: typography.sizes.base * typography.lineHeights.relaxed,
     marginBottom: spacing[3],
-    fontStyle: 'italic',
   },
 
   // Countdown
   countdown: {
     color: colors.flame,
     fontSize: typography.sizes.xs,
-    fontWeight: '600',
+    fontFamily: typography.families.bodySemiBold,
     letterSpacing: typography.letterSpacing.wide,
     textTransform: 'uppercase',
     marginBottom: spacing[3],
@@ -290,17 +256,17 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     fontSize: typography.sizes.sm,
-    fontWeight: '700',
+    fontFamily: typography.families.bodySemiBold,
     letterSpacing: typography.letterSpacing.wide,
   },
   ctaTextReveal: {
     color: '#0D0B09', // dark text on gold — maximum contrast
   },
   ctaTextYourTurn: {
-    color: '#0D0B09', // dark text on ember
+    color: '#FFFFFF', // white on coral
   },
   ctaTextWaiting: {
     color: colors.textMuted,
-    fontWeight: '400',
+    fontFamily: typography.families.body,
   },
 });

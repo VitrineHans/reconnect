@@ -1,15 +1,16 @@
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ListRenderItemInfo } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../../hooks/useSession';
 import { useFriendships } from '../../hooks/useFriendships';
-import type { FriendshipWithState } from '../../hooks/useFriendships';
 import { useGroups } from '../../hooks/useGroups';
 import { useUnseenReactions } from '../../hooks/useReactions';
+import { mergeFeed, type FeedItem } from '../../lib/feed';
 import { FriendshipCard } from '../../components/FriendshipCard';
 import { GroupCard } from '../../components/GroupCard';
+import { SkeletonCard } from '../../components/SkeletonCard';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
 
 export default function HomeScreen() {
@@ -18,7 +19,7 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const userId = session?.user?.id ?? null;
   const { friendships, loading, error, refetch } = useFriendships(userId);
-  const { groups, refetch: refetchGroups } = useGroups(userId);
+  const { groups, loading: groupsLoading, refetch: refetchGroups } = useGroups(userId);
   const { reactions, markSeen, refetch: refetchReactions } = useUnseenReactions(userId);
 
   useFocusEffect(useCallback(() => {
@@ -28,40 +29,62 @@ export default function HomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]));
 
-  function handleCardPress(friendship: FriendshipWithState) {
+  // One feed: friendships + groups together, most actionable first.
+  const feed = useMemo(() => mergeFeed(friendships, groups), [friendships, groups]);
+
+  const friendshipById = useMemo(
+    () => new Map(friendships.map((f) => [f.id, f])),
+    [friendships],
+  );
+
+  const handleFriendshipPress = useCallback((id: string) => {
+    const friendship = friendshipById.get(id);
+    if (!friendship) return;
     if (friendship.state === 'reveal_ready') {
-      router.push(`/friendship/${friendship.id}/reveal`);
+      router.push(`/friendship/${id}/reveal`);
     } else if (friendship.state === 'your_turn') {
-      router.push(`/friendship/${friendship.id}/question`);
+      router.push(`/friendship/${id}/question`);
     }
-    // 'waiting' state: no-op
-  }
+    // 'waiting': nothing to see — the answer stays secret until both submit
+  }, [friendshipById, router]);
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.ember} />
-      </View>
-    );
-  }
+  const handleGroupPress = useCallback((id: string) => {
+    // from=home suppresses the leave-group action in the hub
+    router.push(`/group/${id}?from=home`);
+  }, [router]);
 
-  if (error) {
+  const renderItem = useCallback(({ item }: ListRenderItemInfo<FeedItem>) => (
+    item.kind === 'friendship'
+      ? <FriendshipCard friendship={item.friendship} onPress={handleFriendshipPress} />
+      : <GroupCard group={item.group} onPress={handleGroupPress} />
+  ), [handleFriendshipPress, handleGroupPress]);
+
+  const keyExtractor = useCallback((item: FeedItem) => item.key, []);
+
+  const initialLoading = (loading || groupsLoading) && feed.length === 0;
+
+  if (error && feed.length === 0) {
     return (
       <View style={styles.centered}>
         <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={refetch} accessibilityRole="button">
+          <Text style={styles.retryText}>{t('flow.tryAgain')}</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
     <FlatList
-      data={friendships}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <FriendshipCard friendship={item} onPress={() => handleCardPress(item)} />
-      )}
+      data={feed}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
       contentContainerStyle={styles.list}
       style={styles.screen}
+      initialNumToRender={6}
+      maxToRenderPerBatch={8}
+      windowSize={7}
+      removeClippedSubviews
       ListHeaderComponent={
         <View>
           <Text style={styles.heading}>{t('home.title')}</Text>
@@ -82,27 +105,17 @@ export default function HomeScreen() {
               ))}
             </View>
           )}
+          {initialLoading && (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          )}
         </View>
       }
       ListEmptyComponent={
-        <Text style={styles.emptyText}>{t('home.empty')}</Text>
-      }
-      ListFooterComponent={
-        <View style={styles.groupsSection}>
-          <View style={styles.groupsHeader}>
-            <Text style={styles.groupsTitle}>{t('group.sectionTitle')}</Text>
-            <TouchableOpacity onPress={() => router.push('/group/create')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Text style={styles.newGroup}>{t('group.newGroup')}</Text>
-            </TouchableOpacity>
-          </View>
-          {groups.length === 0 ? (
-            <Text style={styles.emptyText}>{t('group.noGroups')}</Text>
-          ) : (
-            groups.map((g) => (
-              <GroupCard key={g.id} group={g} onPress={() => router.push(`/group/${g.id}`)} />
-            ))
-          )}
-        </View>
+        initialLoading ? null : <Text style={styles.emptyText}>{t('home.empty')}</Text>
       }
     />
   );
@@ -139,24 +152,20 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base, fontFamily: typography.families.body,
     color: colors.textSecondary, marginTop: 2,
   },
-  groupsSection: { marginTop: spacing[6] },
-  groupsHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: spacing[4],
-  },
-  groupsTitle: {
-    fontSize: typography.sizes.lg, fontFamily: typography.families.display, color: colors.text,
-  },
-  newGroup: {
-    fontSize: typography.sizes.sm, fontFamily: typography.families.bodySemiBold, color: colors.ember,
-  },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing[6] },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing[6], backgroundColor: colors.bg },
   emptyText: {
     fontSize: typography.sizes.base, fontFamily: typography.families.body,
     color: colors.textSecondary, textAlign: 'center', marginVertical: spacing[3],
   },
   errorText: {
     fontSize: typography.sizes.sm, fontFamily: typography.families.body,
-    color: colors.flame, textAlign: 'center',
+    color: colors.flame, textAlign: 'center', marginBottom: spacing[4],
+  },
+  retryButton: {
+    borderWidth: 1.5, borderColor: colors.ember, borderRadius: radius.full,
+    paddingHorizontal: spacing[5], paddingVertical: spacing[2],
+  },
+  retryText: {
+    color: colors.ember, fontSize: typography.sizes.sm, fontFamily: typography.families.bodySemiBold,
   },
 });

@@ -103,15 +103,15 @@ describe('FriendshipCard', () => {
     expect(getByText('What is your favourite movie?')).toBeTruthy();
   });
 
-  it('truncates long question text to 80 characters', () => {
-    const longText = 'A'.repeat(100);
+  it('renders long question text in full — never truncated', () => {
+    const longText = 'A'.repeat(200);
     const { getByText } = render(
       <FriendshipCard
         friendship={makeFriendship({ questionText: longText })}
         onPress={jest.fn()}
       />,
     );
-    expect(getByText(`${'A'.repeat(80)}…`)).toBeTruthy();
+    expect(getByText(longText)).toBeTruthy();
   });
 
   it('calls onPress with friendship id when card is pressed', () => {

@@ -62,11 +62,14 @@ async function loadHub(groupId: string, userId: string): Promise<HubData> {
 }
 
 export default function GroupHubScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
   const router = useRouter();
   const { t } = useTranslation();
   const { session } = useSession();
   const userId = session?.user?.id;
+  // Opened from the Home feed: leaving the group belongs in the Vrienden tab's
+  // group detail, so the action is suppressed here.
+  const canLeave = from !== 'home';
 
   const [data, setData] = useState<HubData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -158,9 +161,11 @@ export default function GroupHubScreen() {
             </>
           )}
 
-          <TouchableOpacity style={styles.leaveBtn} onPress={confirmLeave}>
-            <Text style={styles.leaveText}>{t('group.leave')}</Text>
-          </TouchableOpacity>
+          {canLeave && (
+            <TouchableOpacity style={styles.leaveBtn} onPress={confirmLeave}>
+              <Text style={styles.leaveText}>{t('group.leave')}</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       )}
     </View>
