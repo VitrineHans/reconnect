@@ -51,7 +51,12 @@
     "remove": "Verwijderen",
     "removeConfirmTitle": "Vriend verwijderen?",
     "removeConfirmBody": "Dit beëindigt je vriendschap met {{name}} en reset je streak. Je kunt later opnieuw verbinden.",
-    "removeFailed": "Kon vriend niet verwijderen"
+    "removeFailed": "Kon vriend niet verwijderen",
+    "searching": "Zoeken…",
+    "alreadyFriends": "✓ Vrienden",
+    "requestSent": "Verzoek verstuurd ✓",
+    "invitedYou": "Heeft je uitgenodigd 👋",
+    "invalidQuery": "Gebruikersnamen zijn 3–20 letters, cijfers of _"
   },
   "flow": {
     "noQuestionYet": "Nog geen vraag beschikbaar. Kom snel terug!",
@@ -87,7 +92,12 @@
         "energiser": "De energieke",
         "calm": "De rustige"
       },
-      "affirmations": ["Top! Dat ben jij 💅", "Goede keuze!", "Iconisch ⚡", "Vibe bevestigd 🌿"]
+      "affirmations": [
+        "Top! Dat ben jij 💅",
+        "Goede keuze!",
+        "Iconisch ⚡",
+        "Vibe bevestigd 🌿"
+      ]
     },
     "interests": {
       "prompt": "Waar hou je van? 💛",
@@ -104,7 +114,12 @@
         "wellness": "🌱 Welzijn",
         "animals": "🐾 Dieren"
       },
-      "affirmations": ["Goede smaak!", "Lekkere mix!", "Je bent interessant 👀", "Mooi!"]
+      "affirmations": [
+        "Goede smaak!",
+        "Lekkere mix!",
+        "Je bent interessant 👀",
+        "Mooi!"
+      ]
     },
     "age_range": {
       "prompt": "Hoe oud ben je? 🎂",
@@ -116,7 +131,12 @@
         "35-44": "35 – 44",
         "45+": "45+"
       },
-      "affirmations": ["Genoteerd! 🙌", "Genoteerd!", "Perfect!", "Mooi!"]
+      "affirmations": [
+        "Genoteerd! 🙌",
+        "Genoteerd!",
+        "Perfect!",
+        "Mooi!"
+      ]
     },
     "country": {
       "prompt": "Waar woon je? 🌍",
@@ -129,7 +149,12 @@
         "us": "🇺🇸 VS",
         "other": "🌐 Ergens anders"
       },
-      "affirmations": ["Mooie plek! 🗺️", "Genoteerd!", "Leuk!", "Cool!"]
+      "affirmations": [
+        "Mooie plek! 🗺️",
+        "Genoteerd!",
+        "Leuk!",
+        "Cool!"
+      ]
     },
     "life_stage": {
       "prompt": "Hoe is je leven nu?",
@@ -140,14 +165,24 @@
         "parent": "Ouderschap",
         "exploring": "Aan het uitzoeken"
       },
-      "affirmations": ["Klinkt goed!", "Mooi!", "Respect 🙌", "Spannende tijden!"]
+      "affirmations": [
+        "Klinkt goed!",
+        "Mooi!",
+        "Respect 🙌",
+        "Spannende tijden!"
+      ]
     },
     "depth_comfort": {
       "prompt": "Hoe diep mogen vragen gaan? 🤿",
       "subtitle": "Wees eerlijk — er is geen fout antwoord",
       "scaleMin": "Hou het licht",
       "scaleMax": "Ga diep",
-      "affirmations": ["Perfect voor jou!", "Genoteerd!", "Genoteerd!", "Daar passen we ons op aan!"]
+      "affirmations": [
+        "Perfect voor jou!",
+        "Genoteerd!",
+        "Genoteerd!",
+        "Daar passen we ons op aan!"
+      ]
     },
     "off_limits": {
       "prompt": "Iets dat verboden terrein is?",
@@ -159,7 +194,12 @@
         "health": "🏥 Gezondheid",
         "none": "🙅 Niks!"
       },
-      "affirmations": ["Respect. We snappen het 🛡️", "Genoteerd!", "Natuurlijk!", "Helemaal terecht!"]
+      "affirmations": [
+        "Respect. We snappen het 🛡️",
+        "Genoteerd!",
+        "Natuurlijk!",
+        "Helemaal terecht!"
+      ]
     }
   },
   "recorder": {

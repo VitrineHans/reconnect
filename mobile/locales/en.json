@@ -51,7 +51,12 @@
     "remove": "Remove",
     "removeConfirmTitle": "Remove friend?",
     "removeConfirmBody": "This ends your friendship with {{name}} and resets your streak. You can reconnect later.",
-    "removeFailed": "Couldn't remove friend"
+    "removeFailed": "Couldn't remove friend",
+    "searching": "Searching…",
+    "alreadyFriends": "✓ Friends",
+    "requestSent": "Request sent ✓",
+    "invitedYou": "Invited you 👋",
+    "invalidQuery": "Usernames are 3–20 letters, numbers or _"
   },
   "flow": {
     "noQuestionYet": "No question available yet. Check back soon!",
@@ -87,7 +92,12 @@
         "energiser": "The energiser",
         "calm": "The calm one"
       },
-      "affirmations": ["Love it! That's so you 💅", "Great pick!", "Iconic ⚡", "Vibes confirmed 🌿"]
+      "affirmations": [
+        "Love it! That's so you 💅",
+        "Great pick!",
+        "Iconic ⚡",
+        "Vibes confirmed 🌿"
+      ]
     },
     "interests": {
       "prompt": "What do you love? 💛",
@@ -104,7 +114,12 @@
         "wellness": "🌱 Wellness",
         "animals": "🐾 Animals"
       },
-      "affirmations": ["Nice taste!", "Good mix!", "You're interesting 👀", "Love that!"]
+      "affirmations": [
+        "Nice taste!",
+        "Good mix!",
+        "You're interesting 👀",
+        "Love that!"
+      ]
     },
     "age_range": {
       "prompt": "How old are you? 🎂",
@@ -116,7 +131,12 @@
         "35-44": "35 – 44",
         "45+": "45+"
       },
-      "affirmations": ["Got it! 🙌", "Noted!", "Perfect!", "Sweet!"]
+      "affirmations": [
+        "Got it! 🙌",
+        "Noted!",
+        "Perfect!",
+        "Sweet!"
+      ]
     },
     "country": {
       "prompt": "Where do you live? 🌍",
@@ -129,7 +149,12 @@
         "us": "🇺🇸 USA",
         "other": "🌐 Somewhere else"
       },
-      "affirmations": ["Great place! 🗺️", "Noted!", "Lovely!", "Cool!"]
+      "affirmations": [
+        "Great place! 🗺️",
+        "Noted!",
+        "Lovely!",
+        "Cool!"
+      ]
     },
     "life_stage": {
       "prompt": "What's your life like right now?",
@@ -140,14 +165,24 @@
         "parent": "Parent life",
         "exploring": "Figuring it out"
       },
-      "affirmations": ["Sounds great!", "Love it!", "Respect 🙌", "Exciting times!"]
+      "affirmations": [
+        "Sounds great!",
+        "Love it!",
+        "Respect 🙌",
+        "Exciting times!"
+      ]
     },
     "depth_comfort": {
       "prompt": "How deep can questions get? 🤿",
       "subtitle": "Be honest — there's no wrong answer",
       "scaleMin": "Keep it light",
       "scaleMax": "Go deep",
-      "affirmations": ["Perfect for you!", "Got it!", "Noted!", "We'll match that!"]
+      "affirmations": [
+        "Perfect for you!",
+        "Got it!",
+        "Noted!",
+        "We'll match that!"
+      ]
     },
     "off_limits": {
       "prompt": "Anything off-limits?",
@@ -159,7 +194,12 @@
         "health": "🏥 Health",
         "none": "🙅 Nothing!"
       },
-      "affirmations": ["Respect. We've got you 🛡️", "Noted!", "Of course!", "Totally fair!"]
+      "affirmations": [
+        "Respect. We've got you 🛡️",
+        "Noted!",
+        "Of course!",
+        "Totally fair!"
+      ]
     }
   },
   "recorder": {
