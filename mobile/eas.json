@@ -7,7 +7,21 @@
       "distribution": "internal",
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nlhpfatnuzcbhzagyssc.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_-dNS9ZsUnCwHAYFjBbnhHQ_gQQrbWid"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nlhpfatnuzcbhzagyssc.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_-dNS9ZsUnCwHAYFjBbnhHQ_gQQrbWid"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
