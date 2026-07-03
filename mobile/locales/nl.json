@@ -56,7 +56,7 @@
     "alreadyFriends": "✓ Vrienden",
     "requestSent": "Verzoek verstuurd ✓",
     "invitedYou": "Heeft je uitgenodigd 👋",
-    "invalidQuery": "Gebruikersnamen zijn 3–20 letters, cijfers of _"
+    "invalidQuery": "Gebruik 2–20 letters, cijfers of _"
   },
   "flow": {
     "noQuestionYet": "Nog geen vraag beschikbaar. Kom snel terug!",

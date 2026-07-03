@@ -129,16 +129,25 @@ async function fetchGroupsWithState(userId: string): Promise<GroupWithState[]> {
   if (groups.length === 0) return [];
 
   const ids = groups.map((g) => g.id);
+  const currentQids = groups
+    .map((g) => g.current_question_id)
+    .filter((q): q is string => q != null);
+
   const [membersRes, responsesRes] = await Promise.all([
     supabase
       .from('group_members')
       .select('group_id, profiles!user_id ( id, username, display_name, avatar_url )')
       .in('group_id', ids),
     // RLS returns my own responses always, and everyone's once I've answered.
-    supabase
-      .from('question_responses')
-      .select('group_id, user_id, question_id')
-      .in('group_id', ids),
+    // Narrowed server-side to the groups' current questions so stale rows
+    // from past rounds never inflate the payload.
+    currentQids.length > 0
+      ? supabase
+          .from('question_responses')
+          .select('group_id, user_id, question_id')
+          .in('group_id', ids)
+          .in('question_id', currentQids)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (membersRes.error) throw new Error(membersRes.error.message);
   if (responsesRes.error) throw new Error(responsesRes.error.message);

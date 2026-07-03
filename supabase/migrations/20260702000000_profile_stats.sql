@@ -32,6 +32,10 @@ create trigger trigger_answer_count
 -- ── Streak trigger: also track best_streak ───────────────────────────────────
 -- Same 24h logic as 20260624000001; adds best_streak maintenance and skips
 -- group responses (friendship_id is null — groups have no streaks) explicitly.
+-- NOTE: trigger_streak_on_response (created in 20260413000000) is intentionally
+-- not redeclared — CREATE OR REPLACE swaps the function body under the existing
+-- binding. In the UPDATE below, greatest(best_streak, streak_count + 1) reads
+-- the PRE-update streak_count, so streak_count + 1 equals the new value.
 CREATE OR REPLACE FUNCTION public.handle_streak_on_response()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE

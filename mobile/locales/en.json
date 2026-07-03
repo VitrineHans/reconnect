@@ -56,7 +56,7 @@
     "alreadyFriends": "✓ Friends",
     "requestSent": "Request sent ✓",
     "invitedYou": "Invited you 👋",
-    "invalidQuery": "Usernames are 3–20 letters, numbers or _"
+    "invalidQuery": "Use 2–20 letters, numbers or _"
   },
   "flow": {
     "noQuestionYet": "No question available yet. Check back soon!",

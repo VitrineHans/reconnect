@@ -57,6 +57,7 @@ export function levelForAnswers(totalAnswers: number): LevelInfo {
     xp,
     levelFloor,
     nextAt,
+    // denominator = 50 * (level + 1), always positive for level >= 1
     progress: (xp - levelFloor) / (nextAt - levelFloor),
   };
 }

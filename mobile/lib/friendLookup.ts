@@ -3,7 +3,10 @@
  * Pure logic, kept out of the screen so it's unit-testable.
  */
 
-/** Usernames are 3–20 chars of [a-zA-Z0-9_]; searching is allowed from 2 chars. */
+/**
+ * Search-input rule (looser than the 3–20 username rule on purpose):
+ * substring search is allowed from 2 chars, same charset as usernames.
+ */
 export const SEARCH_QUERY_REGEX = /^[a-zA-Z0-9_]{2,20}$/;
 
 export type SearchValidation = 'empty' | 'invalid' | 'ok';

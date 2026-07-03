@@ -83,7 +83,8 @@ export default function HomeScreen() {
       initialNumToRender={6}
       maxToRenderPerBatch={8}
       windowSize={7}
-      removeClippedSubviews
+      // no removeClippedSubviews: it can clip the reveal_ready card's animated
+      // glow at viewport edges, and the feed is small enough not to need it
       ListHeaderComponent={
         <View>
           <Text style={styles.heading}>{t('home.title')}</Text>

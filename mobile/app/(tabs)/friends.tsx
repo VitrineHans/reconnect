@@ -138,6 +138,9 @@ function useFriendsData(userId: string | undefined) {
     } catch {
       // push failure must not block invite send
     }
+    // Non-blocking reconcile: the optimistic state is already visible, but a
+    // background refresh picks up any race (e.g. their invite crossed ours).
+    void fetchAll();
   };
 
   const respondToInvite = async (inviteId: string, status: 'accepted' | 'declined') => {
