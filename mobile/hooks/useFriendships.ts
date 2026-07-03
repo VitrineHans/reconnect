@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { localizedQuestionText } from '../lib/questionText';
 
@@ -174,7 +174,7 @@ export function useFriendships(userId: string | null): UseFriendshipsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!userId) {
       setFriendships([]);
       setLoading(false);
@@ -188,11 +188,11 @@ export function useFriendships(userId: string | null): UseFriendshipsResult {
       .then(setFriendships)
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  };
+  }, [userId]);
 
   useEffect(() => {
     load();
-  }, [userId]);
+  }, [load]);
 
   // Realtime: refetch when any question_response or friendship changes
   useEffect(() => {

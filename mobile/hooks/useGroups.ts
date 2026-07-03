@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { localizedQuestionText } from '../lib/questionText';
 
@@ -110,43 +110,12 @@ interface RawGroup {
   questions: { text: string } | null;
 }
 
-async function buildGroupState(raw: RawGroup, userId: string): Promise<GroupWithState> {
-  const { data: memberRows } = await supabase
-    .from('group_members')
-    .select('user_id, profiles!user_id ( id, username, display_name, avatar_url )')
-    .eq('group_id', raw.id);
-
-  const members: GroupMemberProfile[] = (memberRows ?? []).map(
-    (m) => (m as unknown as { profiles: GroupMemberProfile }).profiles,
-  );
-
-  let iAnswered = false;
-  let othersAnswered = 0;
-  if (raw.current_question_id) {
-    // RLS returns my own response always, and everyone's once I've answered.
-    const { data: responses } = await supabase
-      .from('question_responses')
-      .select('user_id')
-      .eq('group_id', raw.id)
-      .eq('question_id', raw.current_question_id);
-    const rows = (responses ?? []) as { user_id: string }[];
-    iAnswered = rows.some((r) => r.user_id === userId);
-    othersAnswered = rows.filter((r) => r.user_id !== userId).length;
-  }
-
-  return {
-    id: raw.id,
-    name: raw.name,
-    createdBy: raw.created_by,
-    members,
-    questionText: raw.questions ? localizedQuestionText(raw.questions.text) : null,
-    currentQuestionId: raw.current_question_id,
-    iAnswered,
-    othersAnswered,
-    state: deriveGroupState(!!raw.current_question_id, iAnswered, othersAnswered),
-  };
-}
-
+/**
+ * Load all my groups in a fixed THREE queries (was 1 + 2 per group):
+ * my memberships+groups, then all members and all responses batched with
+ * `.in(group_id)`. Responses are matched to each group's current question
+ * client-side (stale rows from previous rounds may survive rotation races).
+ */
 async function fetchGroupsWithState(userId: string): Promise<GroupWithState[]> {
   const { data, error } = await supabase
     .from('group_members')
@@ -157,7 +126,56 @@ async function fetchGroupsWithState(userId: string): Promise<GroupWithState[]> {
   const groups = (data ?? []).map(
     (row) => (row as unknown as { groups: RawGroup }).groups,
   );
-  return Promise.all(groups.map((g) => buildGroupState(g, userId)));
+  if (groups.length === 0) return [];
+
+  const ids = groups.map((g) => g.id);
+  const [membersRes, responsesRes] = await Promise.all([
+    supabase
+      .from('group_members')
+      .select('group_id, profiles!user_id ( id, username, display_name, avatar_url )')
+      .in('group_id', ids),
+    // RLS returns my own responses always, and everyone's once I've answered.
+    supabase
+      .from('question_responses')
+      .select('group_id, user_id, question_id')
+      .in('group_id', ids),
+  ]);
+  if (membersRes.error) throw new Error(membersRes.error.message);
+  if (responsesRes.error) throw new Error(responsesRes.error.message);
+
+  const membersByGroup = new Map<string, GroupMemberProfile[]>();
+  for (const row of membersRes.data ?? []) {
+    const { group_id, profiles } = row as unknown as { group_id: string; profiles: GroupMemberProfile };
+    const list = membersByGroup.get(group_id);
+    if (list) list.push(profiles);
+    else membersByGroup.set(group_id, [profiles]);
+  }
+
+  const responsesByGroup = new Map<string, { user_id: string; question_id: string }[]>();
+  for (const row of (responsesRes.data ?? []) as { group_id: string; user_id: string; question_id: string }[]) {
+    const list = responsesByGroup.get(row.group_id);
+    if (list) list.push(row);
+    else responsesByGroup.set(row.group_id, [row]);
+  }
+
+  return groups.map((raw) => {
+    const rows = (responsesByGroup.get(raw.id) ?? []).filter(
+      (r) => r.question_id === raw.current_question_id,
+    );
+    const iAnswered = rows.some((r) => r.user_id === userId);
+    const othersAnswered = rows.filter((r) => r.user_id !== userId).length;
+    return {
+      id: raw.id,
+      name: raw.name,
+      createdBy: raw.created_by,
+      members: membersByGroup.get(raw.id) ?? [],
+      questionText: raw.questions ? localizedQuestionText(raw.questions.text) : null,
+      currentQuestionId: raw.current_question_id,
+      iAnswered,
+      othersAnswered,
+      state: deriveGroupState(!!raw.current_question_id, iAnswered, othersAnswered),
+    };
+  });
 }
 
 export interface UseGroupsResult {
@@ -172,7 +190,7 @@ export function useGroups(userId: string | null): UseGroupsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!userId) {
       setGroups([]);
       setLoading(false);
@@ -184,12 +202,11 @@ export function useGroups(userId: string | null): UseGroupsResult {
       .then(setGroups)
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  };
+  }, [userId]);
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [load]);
 
   useEffect(() => {
     if (!userId) return;

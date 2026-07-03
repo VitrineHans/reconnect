@@ -26,8 +26,7 @@ export default function HomeScreen() {
     refetch();
     refetchGroups();
     refetchReactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]));
+  }, [refetch, refetchGroups, refetchReactions]));
 
   // One feed: friendships + groups together, most actionable first.
   const feed = useMemo(() => mergeFeed(friendships, groups), [friendships, groups]);
