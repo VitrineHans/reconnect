@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const userId = session?.user?.id ?? null;
   const { friendships, loading, error, refetch } = useFriendships(userId);
-  const { groups, loading: groupsLoading, refetch: refetchGroups } = useGroups(userId);
+  const { groups, loading: groupsLoading, error: groupsError, refetch: refetchGroups } = useGroups(userId);
   const { reactions, markSeen, refetch: refetchReactions } = useUnseenReactions(userId);
 
   useFocusEffect(useCallback(() => {
@@ -88,6 +88,18 @@ export default function HomeScreen() {
       ListHeaderComponent={
         <View>
           <Text style={styles.heading}>{t('home.title')}</Text>
+          {groupsError != null && (
+            <TouchableOpacity
+              style={styles.groupsErrorBanner}
+              onPress={refetchGroups}
+              accessibilityRole="button"
+              testID="groups-error-banner"
+            >
+              <Text style={styles.groupsErrorText}>
+                {t('group.loadFailed')} — {t('flow.tryAgain')}
+              </Text>
+            </TouchableOpacity>
+          )}
           {reactions.length > 0 && (
             <View style={styles.reactionsBanner}>
               <View style={styles.reactionsHeader}>
@@ -151,6 +163,18 @@ const styles = StyleSheet.create({
   reactionItem: {
     fontSize: typography.sizes.base, fontFamily: typography.families.body,
     color: colors.textSecondary, marginTop: 2,
+  },
+  groupsErrorBanner: {
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.flame,
+    borderRadius: radius.lg,
+    padding: spacing[3],
+    marginBottom: spacing[4],
+  },
+  groupsErrorText: {
+    fontSize: typography.sizes.sm, fontFamily: typography.families.bodyMedium,
+    color: colors.flame, textAlign: 'center',
   },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing[6], backgroundColor: colors.bg },
   emptyText: {
