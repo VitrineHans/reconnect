@@ -240,7 +240,26 @@
     "invalidTitle": "Invalid",
     "invalidDisplayName": "Display name must be 1–50 characters.",
     "uploadFailed": "Upload failed",
-    "openSettings": "⚙️ Settings"
+    "openSettings": "⚙️ Settings",
+    "dayStreak": "day streak",
+    "longestStreak": "Longest: {{days}} days",
+    "streakEmptyTitle": "Start your first streak 🔥",
+    "streakEmptyBody": "Answer today's question with a friend to light the fire.",
+    "statsTitle": "Your stats",
+    "statAnswers": "Questions answered",
+    "statFriends": "Friends",
+    "statGroups": "Groups",
+    "statMemberSince": "Member since",
+    "levelTitle": "Level {{level}}",
+    "levelProgress": "{{xp}} / {{next}} XP",
+    "achievementsTitle": "Achievements",
+    "unlocked": "unlocked",
+    "locked": "locked",
+    "inviteTitle": "Bring a friend",
+    "inviteBody": "Reconnect is better together. Invite someone you miss.",
+    "inviteCta": "Invite a friend",
+    "inviteMessage": "Join me on Reconnect — one question a day keeps us close. Find me as @{{username}}!",
+    "statsError": "Couldn't load your stats"
   },
   "settings": {
     "title": "Settings",
@@ -312,5 +331,43 @@
     "home": "Home",
     "friends": "Friends",
     "profile": "Profile"
+  },
+  "achievements": {
+    "firstFriend": {
+      "name": "First friend",
+      "desc": "Add your first friend"
+    },
+    "firstAnswer": {
+      "name": "First answer",
+      "desc": "Record your first answer"
+    },
+    "firstGroup": {
+      "name": "Group starter",
+      "desc": "Join your first group"
+    },
+    "streak3": {
+      "name": "On a roll",
+      "desc": "Reach a 3-day streak"
+    },
+    "streak7": {
+      "name": "One week strong",
+      "desc": "Reach a 7-day streak"
+    },
+    "streak30": {
+      "name": "Unbreakable",
+      "desc": "Reach a 30-day streak"
+    },
+    "answers10": {
+      "name": "Storyteller",
+      "desc": "Answer 10 questions"
+    },
+    "answers50": {
+      "name": "Deep diver",
+      "desc": "Answer 50 questions"
+    },
+    "answers100": {
+      "name": "Centurion",
+      "desc": "Answer 100 questions"
+    }
   }
 }

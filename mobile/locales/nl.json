@@ -240,7 +240,26 @@
     "invalidTitle": "Ongeldig",
     "invalidDisplayName": "Weergavenaam moet 1–50 tekens zijn.",
     "uploadFailed": "Uploaden mislukt",
-    "openSettings": "⚙️ Instellingen"
+    "openSettings": "⚙️ Instellingen",
+    "dayStreak": "dagen streak",
+    "longestStreak": "Langste: {{days}} dagen",
+    "streakEmptyTitle": "Begin je eerste streak 🔥",
+    "streakEmptyBody": "Beantwoord de vraag van vandaag met een vriend om het vuur aan te steken.",
+    "statsTitle": "Jouw statistieken",
+    "statAnswers": "Vragen beantwoord",
+    "statFriends": "Vrienden",
+    "statGroups": "Groepen",
+    "statMemberSince": "Lid sinds",
+    "levelTitle": "Level {{level}}",
+    "levelProgress": "{{xp}} / {{next}} XP",
+    "achievementsTitle": "Prestaties",
+    "unlocked": "ontgrendeld",
+    "locked": "vergrendeld",
+    "inviteTitle": "Neem een vriend mee",
+    "inviteBody": "Reconnect is leuker samen. Nodig iemand uit die je mist.",
+    "inviteCta": "Vriend uitnodigen",
+    "inviteMessage": "Doe met me mee op Reconnect — één vraag per dag houdt ons dichtbij. Vind me als @{{username}}!",
+    "statsError": "Kon je statistieken niet laden"
   },
   "settings": {
     "title": "Instellingen",
@@ -312,5 +331,43 @@
     "home": "Start",
     "friends": "Vrienden",
     "profile": "Profiel"
+  },
+  "achievements": {
+    "firstFriend": {
+      "name": "Eerste vriend",
+      "desc": "Voeg je eerste vriend toe"
+    },
+    "firstAnswer": {
+      "name": "Eerste antwoord",
+      "desc": "Neem je eerste antwoord op"
+    },
+    "firstGroup": {
+      "name": "Groepsstarter",
+      "desc": "Word lid van je eerste groep"
+    },
+    "streak3": {
+      "name": "Lekker bezig",
+      "desc": "Haal een streak van 3 dagen"
+    },
+    "streak7": {
+      "name": "Een week sterk",
+      "desc": "Haal een streak van 7 dagen"
+    },
+    "streak30": {
+      "name": "Onbreekbaar",
+      "desc": "Haal een streak van 30 dagen"
+    },
+    "answers10": {
+      "name": "Verhalenverteller",
+      "desc": "Beantwoord 10 vragen"
+    },
+    "answers50": {
+      "name": "Diepgraver",
+      "desc": "Beantwoord 50 vragen"
+    },
+    "answers100": {
+      "name": "Centurion",
+      "desc": "Beantwoord 100 vragen"
+    }
   }
 }
