@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.reconnect.app",
+      "bundleIdentifier": "com.hanswagener.reconnect",
       "infoPlist": {
         "NSCameraUsageDescription": "Reconnect uses your camera to record video answers.",
         "NSMicrophoneUsageDescription": "Reconnect uses your microphone to record video answers.",
@@ -29,7 +29,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.reconnect.app",
+      "package": "com.hanswagener.reconnect",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
